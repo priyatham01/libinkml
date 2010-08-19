@@ -9,7 +9,7 @@ abstract public class InkTableLike extends InkUniqueElement {
 		super(ink);
 	}
 
-	public InkTableLike(InkInk ink, String id) {
+	public InkTableLike(InkInk ink, String id) throws InkMLComplianceException {
 		super(ink,id);
 	}
 
@@ -24,14 +24,14 @@ abstract public class InkTableLike extends InkUniqueElement {
 		String[] rows = content.split(",");
 		for(String row : rows){
 			row = row.trim();
-			if(row.equals("")){
+			if(row.isEmpty()){
 				continue;
 			}
 			String[] values = row.split(" ");
 			Vector<Object> vrow = new Vector<Object>();
 			for(String value : values){
 				value = value.trim();
-				if(!value.equals("")){
+				if(!value.isEmpty()){
 					vrow.add(this.loadTableElement(value));
 				}
 			}

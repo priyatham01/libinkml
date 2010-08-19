@@ -27,7 +27,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.HashSet;
 import java.util.Set;
 
-
 import ch.unibe.inkml.InkTracePoint;
 
 

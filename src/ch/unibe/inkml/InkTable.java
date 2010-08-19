@@ -18,7 +18,7 @@ public class InkTable extends InkTableLike {
 
 
 
-	public InkTable(InkInk ink, String id) {
+	public InkTable(InkInk ink, String id) throws InkMLComplianceException {
 		super(ink,id);
 	}
 
@@ -41,7 +41,7 @@ public class InkTable extends InkTableLike {
 	@Override
 	public void exportToInkML(Element parent) {
 		Element tableNode = parent.getOwnerDocument().getElementById("table");
-		if(!this.getId().equals("")){
+		if(!this.getId().isEmpty()){
 			tableNode.setAttribute("xml:id", this.getId());
 		}
 		if(this.apply != Apply.absolute){

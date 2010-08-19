@@ -30,9 +30,6 @@ public class InkLookUpMapping extends InkMapping {
 		return false;
 	}
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void backTransform(double[][] sourcePoints, double[][] points,
             InkTraceFormat canvasFormat, InkTraceFormat sourceFormat)
@@ -42,9 +39,6 @@ public class InkLookUpMapping extends InkMapping {
         
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void transform(double[][] sourcePoints, double[][] points,
             InkTraceFormat sourceFormat, InkTraceFormat targetFormat)

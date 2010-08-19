@@ -15,13 +15,14 @@ import org.w3c.dom.Element;
  */
 
 public class InkBrush extends InkAnnotatedElement{
+    public static final String INKML_NAME = "brush";
+    
 	public static final String COLOR = "color";
 	public static final String COLOR_ERASER = "eraser";
+	public static final String ID_PREFIX = "brush";
 	
-	public static final String PREFIX = "brush";
 	
-	
-	public InkBrush(InkInk ink,String id){
+	public InkBrush(InkInk ink,String id) throws InkMLComplianceException{
 		super(ink,id);
 
 	}
@@ -54,19 +55,13 @@ public class InkBrush extends InkAnnotatedElement{
 		return getAnnotation(COLOR);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void exportToInkML(Element parent) throws InkMLComplianceException {
-		Element brush = parent.getOwnerDocument().createElement("brush");
-		brush.setAttribute("xml:id", this.getId());
+		Element brush = parent.getOwnerDocument().createElement(INKML_NAME);
+		brush.setAttribute(INKML_ATTR_ID, this.getId());
 		super.exportToInkML(brush);
 		parent.appendChild(brush);
 	}
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void buildFromXMLNode(Element node) throws InkMLComplianceException {
 		super.buildFromXMLNode(node);

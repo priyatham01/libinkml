@@ -14,10 +14,7 @@ public class InkChannelInteger extends InkChannel {
 	public int defaultValue;
 	public int max, min;
 	
-	/**
-	 * {@inheritDoc}
-	 */
-    @Override
+	@Override
 	public Formatter formatterFactory() {
 		return new NumberFormatter(this);
 	}
@@ -44,7 +41,7 @@ public class InkChannelInteger extends InkChannel {
 
 	@Override
 	public void setDefaultValue(String defaultValue) {
-		if(!defaultValue.equals("")){
+		if(!defaultValue.isEmpty()){
 			this.defaultValue = Integer.parseInt(defaultValue);
 		}else{
 			this.defaultValue = 0;
@@ -52,21 +49,21 @@ public class InkChannelInteger extends InkChannel {
 
 	}
 	public void setMax(String max) {
-		if(!max.equals("")){
+		if(!max.isEmpty()){
 			this.max = Integer.parseInt(max);
-			this.maxSet = true;
+			this.isMax = true;
 		}else{
-			this.maxSet = false;
+			this.isMax = false;
 		}
 	}
 
 	@Override
 	public void setMin(String min) {
-		if(!min.equals("")){
+		if(!min.isEmpty()){
 			this.min = Integer.parseInt(min);
-			this.minSet = true;
+			this.isMin = true;
 		}else{
-			this.minSet = false;
+			this.isMin = false;
 		}
 	}
 	

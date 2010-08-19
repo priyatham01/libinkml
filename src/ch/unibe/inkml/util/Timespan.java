@@ -23,7 +23,6 @@
 package ch.unibe.inkml.util;
 import ch.unibe.inkml.InkChannel;
 import ch.unibe.inkml.InkTracePoint;
-import ch.unibe.inkml.InkTraceView;
 
 public class Timespan implements Comparable<Timespan>{
     
@@ -54,7 +53,7 @@ public class Timespan implements Comparable<Timespan>{
 	}
 
 	public Timespan(InkTracePoint p) {
-		this((Double)p.get(InkChannel.Name.T),(Double)p.get(InkChannel.Name.T));
+		this((Double)p.get(InkChannel.ChannelName.T),(Double)p.get(InkChannel.ChannelName.T));
 	}
 
 	public double getDuration() {
@@ -88,11 +87,11 @@ public class Timespan implements Comparable<Timespan>{
     }
 
 	public void add(InkTracePoint p) {
-		if(this.end < (Double)p.get(InkChannel.Name.T)){
-			this.end = (Double)p.get(InkChannel.Name.T);
+		if(this.end < (Double)p.get(InkChannel.ChannelName.T)){
+			this.end = (Double)p.get(InkChannel.ChannelName.T);
 		}
-		if(this.start > (Double)p.get(InkChannel.Name.T)){
-			this.start = (Double)p.get(InkChannel.Name.T);
+		if(this.start > (Double)p.get(InkChannel.ChannelName.T)){
+			this.start = (Double)p.get(InkChannel.ChannelName.T);
 		}
 	}
 

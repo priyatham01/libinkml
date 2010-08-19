@@ -6,19 +6,21 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.omg.CORBA.Bounds;
 import org.w3c.dom.Element;
 
-import ch.unibe.eindermu.euclidian.Vector;
 import ch.unibe.eindermu.utils.Aspect;
 import ch.unibe.eindermu.utils.Observer;
-import ch.unibe.inkml.InkTraceView.TreeEvent;
 import ch.unibe.inkml.util.Timespan;
 import ch.unibe.inkml.util.TraceBound;
 import ch.unibe.inkml.util.TraceVisitor;
 import ch.unibe.inkml.util.ViewTreeManipulationException;
 
 public class InkTraceViewLeaf extends InkTraceView {
+    
+    public static final String INKML_NAME="traceView";
+    public static final String INKML_ATTR_FROM="from";
+    public static final String INKML_ATTR_TO="to";
+    public static final String INKML_ATTR_TRACEDATA_REF = "traceDataRef";
     /**
      * The trace or trace group represented
      */
@@ -45,42 +47,36 @@ public class InkTraceViewLeaf extends InkTraceView {
 		super(ink, parent);
 	}
 
-	/**  
-	 * {@inheritDoc}
-	 */
     public void buildFromXMLNode(Element node) throws InkMLComplianceException {
         super.buildFromXMLNode(node);
-        if(!node.hasAttribute("traceDataRef")){
-            throw new InkMLComplianceException("A TraceView (represented by InkTraceViewLeaf) must contain the 'traceDataRef' attribute.");
+        if(!node.hasAttribute(INKML_ATTR_TRACEDATA_REF)){
+            throw new InkMLComplianceException("A TraceView (represented by InkTraceViewLeaf) must contain the '"+INKML_ATTR_TRACEDATA_REF+"' attribute.");
         }
-        setTraceDataRef(node.getAttribute("traceDataRef").replace("#", ""));
+        setTraceDataRef(node.getAttribute(INKML_ATTR_TRACEDATA_REF).replace("#", ""));
 
-        if(node.hasAttribute("from")){
-            this.from = node.getAttribute("from");
+        if(node.hasAttribute(INKML_ATTR_FROM)){
+            this.from = node.getAttribute(INKML_ATTR_FROM);
         }
-        if(node.hasAttribute("to")){
-            this.to = node.getAttribute("to");
+        if(node.hasAttribute(INKML_ATTR_TO)){
+            this.to = node.getAttribute(INKML_ATTR_TO);
         }
      }
    
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void exportToInkML(Element parent) throws InkMLComplianceException {
         if(getTraceDataRef()==null){
             return;
         }
-        Element traceViewNode = parent.getOwnerDocument().createElement("traceView");
+        Element traceViewNode = parent.getOwnerDocument().createElement(INKML_NAME);
         parent.appendChild(traceViewNode);
         prepairForExport(parent);
         super.exportToInkML(traceViewNode);
-        writeAttribute(traceViewNode,"traceDataRef",getTraceDataRef(),"");
+        writeAttribute(traceViewNode,INKML_ATTR_TRACEDATA_REF,getTraceDataRef(),"");
         if(!getFrom().equals("1")){
-            writeAttribute(traceViewNode,"from",getFrom(),"1");
+            writeAttribute(traceViewNode,INKML_ATTR_FROM,getFrom(),"1");
         }
         if(getTo() != null){
-            writeAttribute(traceViewNode,"to",getTo(),"");
+            writeAttribute(traceViewNode,INKML_ATTR_TO,getTo(),"");
         }
     }
     
@@ -179,17 +175,11 @@ public class InkTraceViewLeaf extends InkTraceView {
 		return (InkTraceLike) this.getInk().getDefinitions().get(this.getTraceDataRef());
 	}
 
-	 /**
-     * {@inheritDoc}
-     */
     @Override
 	public boolean isEmpty(){
 		return this.getTraceDataRef()==null;
 	}
 	
-    /**
-     * {@inheritDoc}
-     */
     @Override
 	public void accept(TraceVisitor visitor) {
 		visitor.visit(this);
@@ -207,9 +197,6 @@ public class InkTraceViewLeaf extends InkTraceView {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Timespan getTimeSpan() {
         return getTrace().getTimeSpan();
@@ -252,6 +239,11 @@ public class InkTraceViewLeaf extends InkTraceView {
         getParent().acctuallyRemove(this);
         e.aspect = InkTraceView.ON_CHILD_REMOVE;
         notifyObserver(ON_CHANGE, e);
+    }
+
+    @Override
+    public Iterator<InkTracePoint> iterator() {
+        return getTrace().iterator();
     }
 
 

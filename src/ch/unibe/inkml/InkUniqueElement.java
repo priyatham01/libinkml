@@ -9,29 +9,44 @@ import ch.unibe.eindermu.utils.NotImplementedException;
 
 public abstract class InkUniqueElement extends InkElement {
 	
-	private String id;
+    public static final String INKML_ATTR_ID = "xml:id";
+    
+	private String id = null;
 	
 	public InkUniqueElement(InkInk ink) {
 		super(ink);
 		// TODO Auto-generated constructor stub
 	}
 	
-	public InkUniqueElement(InkInk ink, String id) {
+	public InkUniqueElement(InkInk ink, String id) throws InkMLComplianceException {
 		this(ink);
 		this.setId(id);
 	}
 
-	public void setId(String id){
+	public void setId(String id) throws InkMLComplianceException{
+	    if(!id.equals(this.id) && getInk().getDefinitions().containsKey(this.id)){
+            throw new InkMLComplianceException("The id '"+id+"' is already in use, you can not use it.");
+        }
 		if(this.id == null){
 			this.id = id;
-			this.getInk().getDefinitions().put(this);
+			getInk().getDefinitions().put(this);
 		}else{
-			throw new NotImplementedException();
+		    if(!this.id.equals(id)){
+		        getInk().getDefinitions().remove(this.id);
+		        this.id = id;
+		        getInk().getDefinitions().put(this);
+		    }
 		}
 	}
+	
+	/**
+	 * Returns the ID of this element. If the element has no ID, null will be returned.
+	 * @return
+	 */
 	public String getId(){
 		return id;
 	}
+	
 	/**
 	 * Returns the key of this element. If there is no key
 	 * a new key is assigned to this element, and it is registered
@@ -53,17 +68,19 @@ public abstract class InkUniqueElement extends InkElement {
 	@Override
 	public void exportToInkML(Element node) throws InkMLComplianceException{
 		if(this.id != null){
-			node.setAttribute("xml:id", this.getId());
+			node.setAttribute(INKML_ATTR_ID, this.getId());
 		}
 	}
 
 
 	@Override
 	public void buildFromXMLNode(Element node) throws InkMLComplianceException{
-		if(node.hasAttribute("xml:id")){
-			this.setId(node.getAttribute("xml:id"));
+		if(node.hasAttribute(INKML_ATTR_ID)){
+			setId(node.getAttribute(INKML_ATTR_ID));
 		}
 	}
+	
+	
 	public String getLabel() {
 		String result =  super.getLabel();
 		if(this.getId() != null){
@@ -71,6 +88,4 @@ public abstract class InkUniqueElement extends InkElement {
 		}
 		return result;
 	}
-
-	
 }

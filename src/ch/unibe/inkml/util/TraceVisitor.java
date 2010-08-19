@@ -5,7 +5,6 @@ import java.util.Vector;
 
 import ch.unibe.inkml.InkTraceGroup;
 import ch.unibe.inkml.InkTraceLeaf;
-import ch.unibe.inkml.InkTracePointList;
 import ch.unibe.inkml.InkTraceView;
 import ch.unibe.inkml.InkTraceViewContainer;
 import ch.unibe.inkml.InkTraceViewLeaf;

@@ -5,50 +5,32 @@ import org.w3c.dom.Element;
 public class InkCanvas extends InkUniqueElement{
 
 	private static InkCanvas defaultCanvas;
+	public static final String ID_DEFAULT_CANVAS = "DefaultCanvas";
+    public static final String INKML_NAME = "canvas";
+    public static final String INKML_ATTR_TRACEFORMATREF = "traceFormatRef";
+    public static final String ID_PREFIX = "cv";
+	
 	public static InkCanvas getDefaultCanvas(InkInk ink){
-		if(defaultCanvas == null){
-			defaultCanvas = new InkCanvas(ink,"DefaultCanvas");
-			defaultCanvas.setInkTraceFormat(InkTraceFormat.getDefaultTraceFormat(ink));
+	    if(defaultCanvas == null){
+    	    if(ink.getDefinitions().containsKey(ID_DEFAULT_CANVAS)){
+    	        return (InkCanvas) ink.getDefinitions().get(ID_DEFAULT_CANVAS);
+            }else{
+                try {
+                    defaultCanvas = new InkCanvas(ink,ID_DEFAULT_CANVAS);
+                    defaultCanvas.setInkTraceFormat(new DefaultInkTraceFormat(ink));
+                } catch (InkMLComplianceException e) {
+                    // Should not occure, we have already tested above.
+                    throw new Error(e);
+                }
+            }
 		}
 		return defaultCanvas;
-	}
-	
-	public static InkCanvas createInkAnnoCanvas(InkInk ink) {
-		InkCanvas canvas = new InkCanvas(ink,"inkAnnoCanvas");
-		InkTraceFormat format = new InkTraceFormat(ink,"inkAnnoCanvasFormat");
-		try {
-			InkChannel c = InkChannel.channelFactory(InkChannel.Type.DECIMAL, ink);
-			c.setName(InkChannel.Name.X);
-			c.setOrientation(InkChannel.Orientation.P);
-			format.addChannel(c);
-		
-			c = InkChannel.channelFactory(InkChannel.Type.DECIMAL, ink);
-			c.setName(InkChannel.Name.Y);
-			c.setOrientation(InkChannel.Orientation.P);
-			format.addChannel(c);
-			
-			c = InkChannel.channelFactory(InkChannel.Type.DECIMAL, ink);
-			c.setName(InkChannel.Name.T);
-			c.setOrientation(InkChannel.Orientation.P);
-			format.addChannel(c);
-			
-			c = InkChannel.channelFactory(InkChannel.Type.INTEGER, ink);
-			c.setName(InkChannel.Name.F);
-			c.setOrientation(InkChannel.Orientation.P);
-			format.addIntermittentChannel(c);
-		} catch (InkMLComplianceException e) {
-			System.err.println("Its a Bug, please fix it, or contact developer");
-			e.printStackTrace();
-			//Will not happen here, unless it is a bug
-		}
-		canvas.setInkTraceFormat(format);
-		return canvas;
 	}
 	
 	private InkTraceFormat inkTraceFormat;
 	private String traceFormatRef;
 
-	public InkCanvas(InkInk ink,String id){
+	public InkCanvas(InkInk ink,String id) throws InkMLComplianceException{
 		super(ink,id);
 	}
 	
@@ -69,12 +51,12 @@ public class InkCanvas extends InkUniqueElement{
 	}
 	
 	public void exportToInkML(Element parent) throws InkMLComplianceException{
-		Element c = parent.getOwnerDocument().createElement("canvas");
-		c.setAttribute("xml:id", this.getId());
+		Element c = parent.getOwnerDocument().createElement(INKML_NAME);
+		c.setAttribute(InkUniqueElement.INKML_ATTR_ID, this.getId());
 		if(this.inkTraceFormat != null){
 			this.getTraceFormat().exportToInkML(c);
 		}else{
-			c.setAttribute("traceFormatRef", traceFormatRef);
+			c.setAttribute(INKML_ATTR_TRACEFORMATREF, traceFormatRef);
 		}
 		parent.appendChild(c);
 		
@@ -83,14 +65,28 @@ public class InkCanvas extends InkUniqueElement{
 	public void buildFromXMLNode(Element node)
 			throws InkMLComplianceException {
 		super.buildFromXMLNode(node);
-		if(node.hasAttribute("traceFormatRef")){
-			this.traceFormatRef = node.getAttribute("traceFormatRef");
-		}else if(node.getElementsByTagName("traceFormat").getLength() == 1){
+		if(node.hasAttribute(INKML_ATTR_TRACEFORMATREF)){
+			this.traceFormatRef = node.getAttribute(INKML_ATTR_TRACEFORMATREF);
+		}else if(node.getElementsByTagName(InkTraceFormat.INKML_NAME).getLength() == 1){
 			InkTraceFormat f = new InkTraceFormat(this.getInk());
-			f.buildFromXMLNode((Element)node.getElementsByTagName("traceFormat").item(0));
+			f.buildFromXMLNode((Element)node.getElementsByTagName(InkTraceFormat.INKML_NAME).item(0));
 			this.inkTraceFormat = f;
 		}else{
 			throw new InkMLComplianceException("Each canvas must eather contain a traceFormat, or link to one with the attribute traceFormatRef");
 		}
 	}
+
+    /**
+     * @param canvas
+     * @throws InkMLComplianceException 
+     */
+    public void acceptAsCompatible(InkCanvas canvas,boolean strict) throws InkMLComplianceException {
+        if(getTraceFormat()!=null){
+            if(canvas.getTraceFormat() == null){
+                throw new InkMLComplianceException("Documents canvas has no traceFormat");
+            }else{
+                getTraceFormat().acceptAsCompatible(canvas.getTraceFormat(), strict);
+            }
+        }
+    }
 }

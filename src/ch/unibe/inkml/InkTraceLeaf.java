@@ -22,12 +22,9 @@
 package ch.unibe.inkml;
 
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.geom.Point2D;
-import java.nio.DoubleBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,16 +34,35 @@ import java.util.regex.Pattern;
 
 import org.w3c.dom.Element;
 
+import ch.unibe.eindermu.Messenger;
 import ch.unibe.eindermu.utils.Aspect;
+import ch.unibe.eindermu.utils.NotImplementedException;
 import ch.unibe.eindermu.utils.Observer;
-import ch.unibe.inkml.InkChannel.Name;
+import ch.unibe.inkml.InkChannel.ChannelName;
 import ch.unibe.inkml.util.Formatter;
 import ch.unibe.inkml.util.Timespan;
 import ch.unibe.inkml.util.TraceBound;
 import ch.unibe.inkml.util.TraceVisitor;
 
-public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
+public class InkTraceLeaf extends InkTrace {
 
+    public static final String INKML_NAME = "trace";
+    public static final String INKML_ATTR_TYPE = "type";
+    public static final String INKML_ATTR_TYPE_VALUE_PENDOWN = "penDown";
+    public static final String INKML_ATTR_TYPE_VALUE_PENUP = "penUp";
+    public static final String INKML_ATTR_TYPE_VALUE_INDETERMINATE = "indeterminate";
+    public static final String INKML_ATTR_CONTINUATION = "continuation";
+    public static final String INKML_ATTR_CONTINUATION_VALUE_BEGIN = "begin";
+    public static final String INKML_ATTR_CONTINUATION_VALUE_END = "end";
+    public static final String INKML_ATTR_CONTINUATION_VALUE_MIDDLE = "middle";
+    public static final String INKML_ATTR_PRIORREF = "priorRef";
+    public static final String INKML_ATTR_BRUSHREF = "brushRef";
+    public static final String INKML_ATTR_DURATION = "duration";
+    public static final String INKML_ATTR_TIMEOFFSET = "timeOffset";
+    public static final String ID_PREFIX = "t";
+    
+    
+    
     /**
      * trace points, how they are stored in InkML
      */
@@ -60,16 +76,17 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
     
     private int size = 0;
 
+    
     public enum Type {
         PEN_DOWN, PEN_UP, INDETERMINATE;
         public String toString() {
             switch (this) {
             case PEN_DOWN:
-                return "penDown";
+                return INKML_ATTR_TYPE_VALUE_PENDOWN;
             case PEN_UP:
-                return "penUp";
+                return INKML_ATTR_TYPE_VALUE_PENUP;
             case INDETERMINATE:
-                return "indeterminate";
+                return INKML_ATTR_TYPE_VALUE_INDETERMINATE;
             default:
                 return super.toString();
             }
@@ -102,7 +119,15 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
     public enum Continuation {
         BEGIN, END, MIDDLE;
         public String toString() {
-            return super.toString().toLowerCase();
+            switch(this){
+            case BEGIN:
+                return INKML_ATTR_CONTINUATION_VALUE_BEGIN;
+            case END:
+                return INKML_ATTR_CONTINUATION_VALUE_END;
+            case MIDDLE:
+                return INKML_ATTR_CONTINUATION_VALUE_MIDDLE;
+            }
+            return null;
         }
 
         public static Type getValue(String name) {
@@ -150,26 +175,28 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
     /**
      * caches the bounding time span of this trace
      */
-    private Timespan timespan;
+    private Timespan cacheTimespan;
 
     /**
      * caches the bounding box of this trace
      */
-    private TraceBound bound;
+    private TraceBound cacheBound;
 
     /**
      * Caches the center of gravity of this trace
      */
-    private Point2D centerOfGravity = new Point2D.Double();
+    private Point2D cacheCenterOfGravity = new Point2D.Double();
     
     /**
      * Fast access to source index
      */
-    private Map<Name,Integer> sourceIndex;
+    private Map<ChannelName,Integer> cacheSourceIndex;
     
     private boolean tainted = false;
     
+    
     private InkTraceFormat targetFormat;
+
 
     
     public class ProxyInkTracePoint extends InkTracePoint {
@@ -183,8 +210,8 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
          * This method will notify the observers registered for {@link InkTrace#ON_CHANGE} on the trace responsible
          * for this point.
          */
-        public void set(Name name, Object value) {
-            set(name,doubleize(name,value));
+        public void set(ChannelName channel, Object value) {
+            set(channel,doubleize(channel,value));
         }
         
         /**
@@ -192,17 +219,17 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
          * This method will notify the observers registered for {@link InkTrace#ON_CHANGE} on the trace responsible
          * for this point.
          */
-        public void set(Name name, double d) {
+        public void set(ChannelName name, double d) {
             points[i][getIndex(name)] = d;
             taint();
             notifyObserver(InkInk.ON_CHANGE);
         }
 
-        public Object getObject(Name name) {
+        public Object getObject(ChannelName name) {
             return objectify(name,get(name));
         }
         
-        public double get(Name t) {
+        public double get(ChannelName t) {
             return points[i][getIndex(t)];
         }
         
@@ -215,7 +242,7 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
     
     public InkTraceLeaf(InkInk ink, InkTraceGroup parent) {
         super(ink, parent);
-        sourceIndex = getSourceFormat().getIndex();
+        cacheSourceIndex = getSourceFormat().getIndex();
     }
 
     protected void initialize() {
@@ -240,27 +267,27 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
     
     private void renewCache() {
         // new center of gravity
-        centerOfGravity = InkTracePoint.getCenterOfGravity(this);
+        cacheCenterOfGravity = InkTracePoint.getCenterOfGravity(this);
         
         //new timespan
         if (getPointCount() > 0) {
-            if (!getTargetFormat().containsChannel(Name.T)) {
-                System.err.println("point has no time coordinates can not deliver timeSpan");
+            if (!getTargetFormat().containsChannel(ChannelName.T)) {
+                Messenger.error("point has no time coordinates can not deliver timeSpan");
                 //this.testFormat(this.getCanvasFormat());
             }
-            int t = getIndex(Name.T);
-            timespan = new Timespan(points[0][t], points[size-1][t]);
+            int t = getIndex(ChannelName.T);
+            cacheTimespan = new Timespan(points[0][t], points[size-1][t]);
         }
         
         //new bound
-        bound = new TraceBound(getPoint(0));
+        cacheBound = new TraceBound(getPoint(0));
         for(InkTracePoint p: this){
-            bound.add(p);
+            cacheBound.add(p);
         }
 	}
 
 	public TraceBound getBounds() {
-	    return bound;
+	    return cacheBound;
     }
 	
     /**
@@ -268,11 +295,11 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
      * @return
      */
     public Point2D getCenterOfGravity() {
-        return centerOfGravity;
+        return cacheCenterOfGravity;
     }
 
     public Timespan getTimeSpan() {
-        return timespan;
+        return cacheTimespan;
     }
 
     public void backTransformPoints() throws InkMLComplianceException {
@@ -367,7 +394,7 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
      * @param name
      * @return
      */
-    protected int getIndex(Name name){
+    protected int getIndex(ChannelName name){
         return getTargetFormat().indexOf(name);
     }
     
@@ -378,7 +405,7 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
      * @param d value to transform
      * @return object in the correct type.
      */
-    protected Object objectify(Name name,double d){
+    protected Object objectify(ChannelName name,double d){
         return getTargetFormat().objectify(name,d);
     }
     /**
@@ -387,7 +414,7 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
      * @param o object to convert
      * @return resulting double
      */
-    protected double doubleize(Name name,Object o){
+    protected double doubleize(ChannelName name,Object o){
         return getTargetFormat().doubleize(name,o);
     }
     
@@ -418,17 +445,6 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
         return true;
     }
 
-    /**
-     * Returns the distance between p and the nearest point in this trace
-     * @param p other point
-     * @return euclidian distance
-     */
-    public double distance(Point p) {
-        return InkTracePoint.distanceToPoint(this, p);
-    }
-
-    
-
 
     /**
      * {@inheritDoc}
@@ -436,23 +452,23 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
      */
     public void buildFromXMLNode(Element node) throws InkMLComplianceException {
         super.buildFromXMLNode(node);
-        if (node.hasAttribute("type")) {
-            this.type = Type.valueOf(loadAttribute(node, "type", null));
+        if (node.hasAttribute(INKML_ATTR_TYPE)) {
+            this.type = Type.valueOf(loadAttribute(node, INKML_ATTR_TYPE, null));
         }
-        if (node.hasAttribute("continuation")) {
+        if (node.hasAttribute(INKML_ATTR_CONTINUATION)) {
             this.continuation = Continuation.valueOf(node
-                    .getAttribute("continuation"));
+                    .getAttribute(INKML_ATTR_CONTINUATION));
         }
         if (this.continuation == Continuation.END
                 || this.continuation == Continuation.MIDDLE) {
-            this.priorRef = loadAttribute(node, "priorRef", null);
+            this.priorRef = loadAttribute(node, INKML_ATTR_PRIORREF, null);
         }
-        this.brushRef = loadAttribute(node, "brushRef", null);
-        if (node.hasAttribute("duration")) {
-            this.duration = Double.parseDouble(node.getAttribute("duration"));
+        this.brushRef = loadAttribute(node, INKML_ATTR_BRUSHREF, null);
+        if (node.hasAttribute(INKML_ATTR_DURATION)) {
+            this.duration = Double.parseDouble(node.getAttribute(INKML_ATTR_DURATION));
         }
-        if (node.hasAttribute("timeOffset")) {
-            this.duration = Double.parseDouble(node.getAttribute("timeOffset"));
+        if (node.hasAttribute(INKML_ATTR_TIMEOFFSET)) {
+            this.duration = Double.parseDouble(node.getAttribute(INKML_ATTR_TIMEOFFSET));
         }
         final List<Formatter> formatter = new ArrayList<Formatter>();
         for (InkChannel c : this.getSourceFormat()) {
@@ -502,7 +518,7 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
     @Override
     public void exportToInkML(Element parent) throws InkMLComplianceException {
         if (this.isRoot()
-                && parent.getNodeName().equals("ink")
+                && parent.getNodeName().equals(InkInk.INKML_NAME)
                 && this.getCurrentContext() != this.getInk()
                         .getCurrentContext()) {
             this.getCurrentContext().exportToInkML(parent);
@@ -510,21 +526,21 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
         if(tainted){
             backTransformPoints();
         }
-        Element traceNode = parent.getOwnerDocument().createElement("trace");
+        Element traceNode = parent.getOwnerDocument().createElement(INKML_NAME);
         parent.appendChild(traceNode);
         super.exportToInkML(traceNode);
-        writeAttribute(traceNode, "type", this.getType().toString(),
+        writeAttribute(traceNode, INKML_ATTR_TYPE, this.getType().toString(),
                 Type.PEN_DOWN.toString());
         if (getContinuation() != null) {
-            writeAttribute(traceNode, "continuation", getContinuation()
+            writeAttribute(traceNode, INKML_ATTR_CONTINUATION, getContinuation()
                     .toString(), null);
         }
-        writeAttribute(traceNode, "priorRef", priorRef, "");
-        writeAttribute(traceNode, "brushRef", brushRef, null);
+        writeAttribute(traceNode, INKML_ATTR_PRIORREF, priorRef, "");
+        writeAttribute(traceNode, INKML_ATTR_BRUSHREF, brushRef, null);
         if (duration != null)
-            writeAttribute(traceNode, "duration", duration.toString(), null);
+            writeAttribute(traceNode, INKML_ATTR_DURATION, duration.toString(), null);
         if (timeOffset != null)
-            writeAttribute(traceNode, "timeOffset", timeOffset.toString(), null);
+            writeAttribute(traceNode, INKML_ATTR_TIMEOFFSET, timeOffset.toString(), null);
 
         StringBuffer pointString = new StringBuffer();
         List<Formatter> formatter = new ArrayList<Formatter>();
@@ -565,7 +581,7 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
     public List<InkTraceView> getSubSet(InkTraceViewContainer tw,
             List<Integer> from, List<Integer> to) {
         final InkTraceViewLeaf tv = new InkTraceViewLeaf(this.getInk(), tw);
-        tv.setTraceDataRef(this.getIdNow("t"));
+        tv.setTraceDataRef(this.getIdNow(ID_PREFIX));
         if (!from.isEmpty()) {
             tv.setFrom(from.get(0).toString());
         }
@@ -583,7 +599,7 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
      */
     public InkTraceViewLeaf createView() {
         final InkTraceViewLeaf i = new InkTraceViewLeaf(this.getInk(), null);
-        i.setTraceDataRef(this.getIdNow("t"));
+        i.setTraceDataRef(this.getIdNow(ID_PREFIX));
         return i;
     }
 
@@ -594,7 +610,7 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
      * @param b the new brush
      */
     public void setBrush(InkBrush b) {
-        this.brushRef = b.getIdNow("brush");
+        this.brushRef = b.getIdNow(InkBrush.ID_PREFIX);
     }
 
     /**
@@ -618,8 +634,8 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
     public Polygon getPolygon() {
         int[] xpoints = new int[getPointCount()];
         int[] ypoints = new int[getPointCount()];
-        int x = getIndex(Name.X);
-        int y = getIndex(Name.Y);
+        int x = getIndex(ChannelName.X);
+        int y = getIndex(ChannelName.Y);
         for(int i = 0;i<xpoints.length;i++){
             xpoints[i] = (int) points[i][x];
             ypoints[i] = (int) points[i][y];
@@ -686,7 +702,7 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
     public abstract class PointConstructionBlock{
         private int i = 0;
         public PointConstructionBlock(int length){
-            sourcePoints = new double[length][sourceIndex.size()];
+            sourcePoints = new double[length][cacheSourceIndex.size()];
             size = length;
         }
         /**
@@ -700,8 +716,8 @@ public class InkTraceLeaf extends InkTrace implements Iterable<InkTracePoint> {
          * @param name Channel name
          * @param value value of the point's channel
          */
-        public void set(Name name, double value) {
-            sourcePoints[i][sourceIndex.get(name)] = value;
+        public void set(ChannelName name, double value) {
+            sourcePoints[i][cacheSourceIndex.get(name)] = value;
         }
         
         /**

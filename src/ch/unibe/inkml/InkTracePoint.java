@@ -3,22 +3,100 @@
  */
 package ch.unibe.inkml;
 
-import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import ch.unibe.eindermu.euclidian.Segment;
-import ch.unibe.inkml.InkChannel.Name;
+import ch.unibe.inkml.InkChannel.ChannelName;
 
 /**
+ * An InkTracePoint represents a sample point of digital Ink.
+ * It inherits from Point2D, so it depends on the Channel values X and Y. 
+ * 
+ * A InkTracePoint gives access to the values of all Channels available.
+ * The two main channels X and Y have their own methods.
+ * 
+ * This class has static method to calculate useful derived values. 
+ * 
  * @author emanuel
- *
  */
 public abstract class InkTracePoint extends Point2D {
- 
+     
+    /**
+     * Change the X coordinate to x
+     * @param x the new x value
+     */
+    public void setX(double x) {
+        set(ChannelName.X,x);
+    }
+
+    /**
+     * Change the Y coordinate to y
+     * @param y the new y value 
+     */
+    public void setY(double y) {
+       set(ChannelName.Y,y);
+    }
     
+    @Override
+    public double getX() {
+        return get(ChannelName.X);
+    }
+
+    @Override
+    public double getY() {
+        return get(ChannelName.Y);
+    }
+
+    
+    @Override
+    public void setLocation(double x, double y) {
+        setX(x);setY(y);
+    }
+    
+    /**
+     * Returns the value of the specified channel in double precision.
+     * If the channel has not double precision type then the conversion to
+     * double will take place as defined in the channel.
+     * @param channel Name of the channel
+     * @return
+     */
+    public abstract double get(ChannelName channel);
+    
+    /**
+     * Returns the value of the specified channel as object of the type specified by the channel.
+     * @param channel Name of the channel
+     * @return
+     */
+    public abstract Object getObject(ChannelName channel);
+    
+    /**
+     * Sets the value of the specified channel as double value.
+     * @param channel Name of the channel
+     * @param d value.
+     */
+    public abstract void set(ChannelName channel, double d);
+    
+    /**
+     * Sets the value of the specified channel as the object type specified by the named channel.
+     * @param channel Name of the channel
+     * @param value value.
+     */
+    public abstract void set(ChannelName channel, Object value);
+
+
+    
+    
+    
+    /**
+     * Returns the distance from point p to the nearest of all points in the list of points given by l 
+     * @param l list of points
+     * @param p point for which the nearest distance should be given. 
+     * @return distance to nearest point in double precision.
+     */
     public static double distanceToPoint(Iterable<InkTracePoint> l, Point2D p) {
         double dist = java.lang.Double.MAX_VALUE;
         for(InkTracePoint po : l) {
@@ -30,17 +108,33 @@ public abstract class InkTracePoint extends Point2D {
         return dist;
     }
     
-    public static Polygon getPolygon(List<InkTracePoint> l) {
-        int[] xs = new int[l.size()];
-        int[] ys = new int[l.size()];
-        int i = 0;
+    /**
+     * Returns a polygon created from the X and Y Channel of the given list of InkTracePoints 
+     * @param l lits of points
+     * @return
+     */
+    public static Polygon getPolygon(Iterable<InkTracePoint> l) {
+        Vector<Integer> vxs = new Vector<Integer>();
+        Vector<Integer> vys = new Vector<Integer>();
+        
         for(InkTracePoint p : l) {
-            xs[i] = (int) p.getX();
-            ys[i++] = (int) p.getY();
+            vxs.add((int) p.getX());
+            vys.add((int) p.getY());
         }
-        return new Polygon(xs, ys, l.size());
+        int[] xs = new int[vxs.size()];
+        int[] ys = new int[vys.size()];
+        for(int i = 0;i<vxs.size();i++){
+            xs[i] = vxs.get(i);
+            ys[i] = vys.get(i);
+        }
+        return new Polygon(xs, ys, vxs.size());
     }
 
+    /**
+     * Returns the center of gravity of all points in the list of points.
+     * @param points
+     * @return
+     */
     public static Point2D getCenterOfGravity(Iterable<InkTracePoint> points) {
         double x = 0,y = 0, i = 0;
         for(InkTracePoint p : points){
@@ -49,76 +143,69 @@ public abstract class InkTracePoint extends Point2D {
             i++;
         }
         return new Point2D.Double(x/i,y/i);
-    }
+    }    
     
     /**
-     * Change the X coordinate to x
-     * @param x the new x value
+     * Distance between two set of traces. Not only the distance between points are considered,
+     * but also the distance between points and connecting lines between subsequental points.
+     * and the distance between all connecting lines. So if the two traces cross each other somewhere
+     * 0 is returned. 
+     * @param points_l
+     * @param points_r
      */
-    public void setX(double x) {
-        set(Name.X,x);
-    }
+    public static double distanceTraceToTrace(Iterable<InkTracePoint> points_l, Iterable<InkTracePoint> points_r) {
+        List<Segment> segments_l= new ArrayList<Segment>();
+        List<Segment> segments_r= new ArrayList<Segment>();
 
-    /**
-     * Change the Y coordinate to y
-     * @param y the new y value 
-     */
-    public void setY(double y) {
-       set(Name.Y,y);
-    }
-    
-    public double getX() {
-        return get(Name.X);
-    }
-
-    public double getY() {
-        return get(Name.Y);
-    }
-
-    
-    @Override
-    public void setLocation(double x, double y) {
-        setX(x);setY(y);
-    }
-    
-    public abstract double get(InkChannel.Name t);
-    
-    public abstract Object getObject(Name name);
-    
-    public abstract void set(Name name, double d);
-    
-    public abstract void set(Name name, Object value);
-
-    /**
-     * @param points
-     * @param points2
-     */
-    public static double distanceTraceToTrace(List<InkTracePoint> points, List<InkTracePoint> points2) {
-        List<Segment> segments= new ArrayList<Segment>();
-        List<Segment> segments2= new ArrayList<Segment>();
-        if(points.size() == 1){
-            return distanceToPoint(points2,points.get(0));
-        }
-        if(points2.size() == 1){
-            return distanceToPoint(points,points2.get(0));
-        }
-        for(int i1 = 1;i1<points.size();i1++){
-            segments.add(new Segment(points.get(i1-1),points.get(i1)));
-            for(int i2 = 1;i2<points2.size();i2++){
-                if(i1 == 1){
-                    segments2.add(new Segment(points2.get(i2-1),points2.get(i2)));        
-                }
-                if(segments.get(i1-1).isCrossing(segments2.get(i2-1))){
-                    return 0;
-                }
+        InkTracePoint lastPoint_l = null;
+        InkTracePoint lastPoint_r = null;;
+        
+        for(InkTracePoint point_l : points_l){
+            if(lastPoint_l != null){
+                segments_l.add(new Segment(lastPoint_l,point_l));
             }
+            lastPoint_l = point_l;
         }
+        
+        
+        for(InkTracePoint point_r : points_r){
+            if(lastPoint_r != null){
+                segments_r.add(new Segment(lastPoint_r,point_r));        
+            }
+            lastPoint_r = point_r;
+        }
+        //test that at least one point of each side exists.
+        assert lastPoint_l != null;
+        assert lastPoint_r != null;
+        
         double dist = Integer.MAX_VALUE;
-        for(int i1 = 0;i1<points.size()-1;i1++){
-            for(int i2 = 0;i2<points2.size()-1;i2++){
-                double tdist = segments.get(i1).distance(segments2.get(i2));
-                if(tdist < dist){
-                    dist = tdist;
+        
+        //if left trace has only one point:
+        if(segments_l.size() == 0){
+            // if both has only one point:
+            if(segments_r.size() == 0){
+                return lastPoint_l.distance(lastPoint_r);
+            }
+            for(Segment segment_r : segments_r){
+                dist = Math.min(segment_r.ptSegDist(lastPoint_l),dist);
+            }
+            return dist;
+        }
+        
+        //if right trace has only one point:
+        if(segments_r.size() == 0){
+            for(Segment segment_l : segments_l){
+                dist = Math.min(segment_l.ptSegDist(lastPoint_r),dist);
+            }
+            return dist;
+        }
+        
+        for(int l = 0; l < segments_l.size(); l++){
+            for(int r = 0; r < segments_r.size(); r++){
+                dist = Math.min(dist, segments_l.get(l).distance(segments_r.get(r)));
+                // if we already have a crossing dist == 0 
+                if(dist < 0.000001){
+                    return dist;
                 }
             }
         }

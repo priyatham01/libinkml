@@ -7,7 +7,6 @@ public class InkUnknownMapping extends InkMapping {
 
 	public InkUnknownMapping(InkInk ink) {
 		super(ink);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -18,7 +17,6 @@ public class InkUnknownMapping extends InkMapping {
 	@Override
 	protected void exportToInkMLHook(Element mappingNode)
 			throws InkMLComplianceException {
-		// TODO Auto-generated method stub
 		
 	}
 	@Override
@@ -26,9 +24,6 @@ public class InkUnknownMapping extends InkMapping {
 		return true;
 	}
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void transform(double[][] sourcePoints, double[][] points,
             InkTraceFormat sourceFormat, InkTraceFormat targetFormat)
@@ -45,9 +40,6 @@ public class InkUnknownMapping extends InkMapping {
         }
     }
     
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void backTransform(double[][] sourcePoints, double[][] points,
             InkTraceFormat canvasFormat, InkTraceFormat sourceFormat)
@@ -65,4 +57,5 @@ public class InkUnknownMapping extends InkMapping {
         
     }
 
+    
 }

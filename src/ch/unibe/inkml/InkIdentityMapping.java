@@ -5,8 +5,6 @@ package ch.unibe.inkml;
 
 import org.w3c.dom.Element;
 
-import ch.unibe.inkml.InkChannel.Name;
-
 /**
  * @author emanuel
  *
@@ -44,9 +42,6 @@ public class InkIdentityMapping extends InkMapping {
 		return true;
 	}
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void transform(double[][] sourcePoints, double[][] points,
             InkTraceFormat sourceFormat, InkTraceFormat targetFormat)
@@ -63,9 +58,6 @@ public class InkIdentityMapping extends InkMapping {
         }
     }
 	
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void backTransform(double[][] sourcePoints, double[][] points,
             InkTraceFormat canvasFormat, InkTraceFormat sourceFormat)
@@ -82,7 +74,4 @@ public class InkIdentityMapping extends InkMapping {
         }
         
     }
-
-
-
 }

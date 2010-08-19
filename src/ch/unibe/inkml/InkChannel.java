@@ -4,6 +4,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import ch.unibe.inkml.util.Formatter;
+import ch.unibe.inkml.util.NumberFormatter;
 
 /**
  * Represent an InkML Channel element.
@@ -127,6 +128,18 @@ import ch.unibe.inkml.util.Formatter;
 
 abstract public class InkChannel extends InkUniqueElement {
 	
+    public static final String INKML_NAME = "channel";
+    public static final String INKML_ATTR_NAME = "name";
+    public static final String INKML_ATTR_TYPE = "type";
+    public static final String INKML_ATTR_DEFAULT = "default";
+    public static final String INKML_ATTR_MIN = "min";
+    public static final String INKML_ATTR_MAX = "max";
+    public static final String INKML_ATTR_ORIENTATION = "orientation";
+    public static final String INKML_ATTR_ORIENTATION_VALUE_P = "+ve";
+    public static final String INKML_ATTR_ORIENTATION_VALUE_M = "-ve";
+    public static final String INKML_ATTR_RESPECT_TO = "respectTo";
+    public static final String INKML_ATTR_UNITS = "units";
+    
     /**
      * The type attribute defines the encoding type for the channel 
      * (either boolean, decimal, or integer). 
@@ -145,7 +158,7 @@ abstract public class InkChannel extends InkUniqueElement {
 	 * The required name attribute specifies the interpretation of the channel in the trace data
 	 *
 	 */
-	public static enum Name {
+	public static enum ChannelName {
     	    /**
     	     * X coordinate. This is the horizontal pen position on the 
     	     * writing surface, increasing to the right for +ve orientation.
@@ -239,14 +252,21 @@ abstract public class InkChannel extends InkUniqueElement {
 	        T
 	        }
 
-	private Name name;
-	private Orientation orientation = Orientation.P; 
+	private ChannelName name;
+	
+	private Orientation orientation = Orientation.P;
+	
 	private String units;
+	
 	private boolean intermittent = false;
-	protected boolean maxSet;
-	protected boolean minSet;
+	
+	protected boolean isMax;
+	
+	protected boolean isMin;
 	
 	private InkMapping mapping;
+
+    private boolean isFinal;
 	
 	/**
 	 * Creates a Channel from an InkML XML DOM node, by identifying the type and selecting
@@ -257,7 +277,7 @@ abstract public class InkChannel extends InkUniqueElement {
 	 * @throws InkMLComplianceException
 	 */
 	public static InkChannel channelFactory(InkInk ink,Element node) throws InkMLComplianceException{
-		String pureT = node.getAttribute("type");
+		String pureT = node.getAttribute(INKML_ATTR_TYPE);
 		for(Type t : Type.values()){
 			if(pureT.equals(t.toString())){
 				InkChannel c =  channelFactory(t,ink);
@@ -295,21 +315,26 @@ abstract public class InkChannel extends InkUniqueElement {
 	/**
 	 * Returns the name of the channel which in InkML is the string used to specify
 	 * the purpose of the given Channel. 
-	 * @see Name
+	 * @see ChannelName
 	 * @return
 	 */
-	public Name getName() {
+	public ChannelName getName() {
 		return name;
 	}
 	
 	/**
 	 * Sets the name.
-	 * @see Name
+	 * @see ChannelName
 	 * @see this.getName()
 	 * @param name
 	 * @return
+	 * @throws InkMLComplianceException 
 	 */
-	public InkChannel setName(Name name) {
+	public InkChannel setName(ChannelName name) throws InkMLComplianceException {
+	    assert !isFinal();
+	    if(isFinal()){
+	        throw new InkMLComplianceException("The name of channel can not be changed any more if it set to final");
+	    }
 		this.name = name;
 		return this;
 	}
@@ -365,14 +390,14 @@ abstract public class InkChannel extends InkUniqueElement {
 	 * @return
 	 */
 	public boolean isMax(){
-		return this.maxSet;
+		return isMax;
 	}
 	/**
 	 * Returns true if there is a minimum value specified
 	 * @return
 	 */
 	public boolean isMin(){
-		return this.minSet;
+		return isMin;
 	}
 	
 	/**
@@ -390,6 +415,7 @@ abstract public class InkChannel extends InkUniqueElement {
 	 * @param orientation
 	 */
 	public void setOrientation(Orientation orientation) {
+	    assert !isFinal();
 		this.orientation = orientation;
 	}
 	/**
@@ -405,6 +431,7 @@ abstract public class InkChannel extends InkUniqueElement {
 	 * @param units
 	 */
 	public void setUnits(String units) {
+	    assert !isFinal();
 		this.units = units;
 	}
 
@@ -439,6 +466,7 @@ abstract public class InkChannel extends InkUniqueElement {
 	 * @param i
 	 */
 	public void setIntermittent(boolean i){
+	    assert !isFinal();
 		this.intermittent = i;
 	}
 
@@ -456,28 +484,33 @@ abstract public class InkChannel extends InkUniqueElement {
 		super.buildFromXMLNode(node);
 		//type and id is done allready
 		//name
-		this.name = Name.valueOf(node.getAttribute("name"));
+		this.name = ChannelName.valueOf(node.getAttribute(INKML_ATTR_NAME));
 		if(this.name == null){
-			throw new InkMLComplianceException("A channel has the unsupported name '"+node.getAttribute("name")+"'");
+			throw new InkMLComplianceException("A channel has the unsupported name '"+node.getAttribute(INKML_ATTR_NAME)+"'");
 		}
 		//default
-		this.setDefaultValue(node.getAttribute("default"));
+		this.setDefaultValue(node.getAttribute(INKML_ATTR_DEFAULT));
 		//min
-		this.setMin(node.getAttribute("min"));
+		this.setMin(node.getAttribute(INKML_ATTR_MIN));
 		//max
-		this.setMax(node.getAttribute("max"));
+		this.setMax(node.getAttribute(INKML_ATTR_MAX));
 		//orientation
-		String o = node.getAttribute("orientation");
-		if(o.equals("-ve")){
+		String o = node.getAttribute(INKML_ATTR_ORIENTATION);
+		if(o.equals(INKML_ATTR_ORIENTATION_VALUE_M)){
 			this.setOrientation(Orientation.M);
-		}else{
+		}else if(o == null || o.isEmpty() || o.equals(INKML_ATTR_ORIENTATION_VALUE_P)){
 			this.setOrientation(Orientation.P);
+		}else{
+		    throw new InkMLComplianceException(String.format(
+		        "Attribute '%s' of element '%s' has an unexpected value",
+		        INKML_ATTR_ORIENTATION,INKML_NAME
+		        ));
 		}
 		//units
-		if(node.hasAttribute("units")){
-			this.units = node.getAttribute("units");
+		if(node.hasAttribute(INKML_ATTR_UNITS)){
+			this.units = node.getAttribute(INKML_ATTR_UNITS);
 		}
-		 NodeList list = node.getElementsByTagName("mapping");
+		 NodeList list = node.getElementsByTagName(InkMapping.INKML_NAME);
 		 if(list.getLength() > 0){
 			 this.mapping = InkMapping.mappingFactory(getInk(), (Element)list.item(0));
 		 }
@@ -485,34 +518,35 @@ abstract public class InkChannel extends InkUniqueElement {
 	
 	@Override
 	public void exportToInkML(Element tf) throws InkMLComplianceException {
-		Element c = tf.getOwnerDocument().createElement("channel");
+	    assert isFinal();
+		Element c = tf.getOwnerDocument().createElement(INKML_NAME);
 		//id
 		if(this.getId() != null){
-			c.setAttribute("xml:id", this.getId());
+			c.setAttribute(INKML_ATTR_ID, this.getId());
 		}
 		//name
-		c.setAttribute("name", this.getName().toString());
+		c.setAttribute(INKML_ATTR_NAME, this.getName().toString());
 		//type
 		if(this.getType() != Type.DECIMAL){
-			c.setAttribute("type", this.getType().toString());
+			c.setAttribute(INKML_ATTR_TYPE, this.getType().toString());
 		}
 		//default
 		this.exportDefaultToInkML(c);
 		//min
-		if(this.minSet){
-			c.setAttribute("min", Double.toString(this.getMin()));
+		if(this.isMin){
+			c.setAttribute(INKML_ATTR_MIN, NumberFormatter.printDouble(this.getMin()));
 		}
 		//max
-		if(this.maxSet){
-			c.setAttribute("max", Double.toString(this.getMax()));
+		if(this.isMax){
+			c.setAttribute(INKML_ATTR_MAX, NumberFormatter.printDouble(this.getMax()));
 		}
 		//orientation
 		if(this.orientation != Orientation.P){
-			c.setAttribute("orientation","-ve");
+			c.setAttribute(INKML_ATTR_ORIENTATION,INKML_ATTR_ORIENTATION_VALUE_M);
 		}
 		//units
 		if(this.units != null){
-			c.setAttribute("units", this.units);
+			c.setAttribute(INKML_ATTR_UNITS, this.units);
 		}
 		tf.appendChild(c);
 		if(this.mapping != null){
@@ -520,14 +554,16 @@ abstract public class InkChannel extends InkUniqueElement {
 		}
 	}
 
-	protected abstract void exportDefaultToInkML(Element c);
+
+
+    protected abstract void exportDefaultToInkML(Element c);
 	
 	/**
 	 * Returns the prefix for ids
 	 * @return
 	 */
 	public String getPrefix(){
-		return "channel";
+		return INKML_NAME;
 	}
 
     /**
@@ -540,5 +576,80 @@ abstract public class InkChannel extends InkUniqueElement {
      * @return
      */
     abstract public Object objectify(double d);
+
+    /**
+     * Sets this Channel final. This will prevent further changes of this
+     * Channel. 
+     * Only final channels can be added to traceFormat since changing a channel 
+     * while it's used may invalidate the traceFormats or samplesets.
+     * 
+     * @throws InkMLComplianceException If the TraceFormat does not comply with InkML
+     */
+    public void setFinal() {
+        isFinal = true;
+    }
 	
+    /**
+     * 
+     * Test if this Channel is final. Only final channels can be added to traceFormat since changing a channel 
+     * while it's used may invalidate the traceFormats or samplesets.
+     * @return true if this channel is final
+     */
+    private boolean isFinal() {
+        return isFinal;
+    }
+
+    /**
+     * @param channel
+     * @param strict
+     * @throws InkMLComplianceException 
+     */
+    public void acceptAsCompatible(InkChannel channel, boolean strict) throws InkMLComplianceException {
+        if(strict && this.isMax()){
+            if(!channel.isMax()){
+                throw new InkMLComplianceException(String.format("Channel '%s': has no Max value defined.",getName().toString()));
+            }else if(channel.getMax() > getMax()){
+                throw new InkMLComplianceException(String.format("Channel '%s': Max value (%f) is exeeded by %f.",getName().toString(),this.getMax(),channel.getMax()));
+            }
+        }
+        if(strict && this.isMin()){
+            if(!channel.isMin()){
+                throw new InkMLComplianceException(String.format("Channel '%s': has no Min value defined.",getName().toString()));
+            }
+            else if(channel.getMin() < getMin()){
+                throw new InkMLComplianceException(String.format("Channel '%s': Min value (%f) is lower than %f.",getName().toString(),this.getMin(),channel.getMin()));
+            }
+        }
+        if(strict && this.getUnits()!=null){
+            if(channel.getUnits()==null || !channel.getUnits().equals(getUnits())){
+                throw new InkMLComplianceException(String.format("Channel '%s': Unit is missing or does not match '%s'.", getName().toString(),getUnits()));
+            }
+        }
+        if(getOrientation() != channel.getOrientation()){
+            throw new InkMLComplianceException(String.format("Channel '%s': Orientation does not match.", getName().toString(),getUnits()));
+        }
+    }
+    
+    public InkChannel clone(InkInk ink){
+        try {
+            InkChannel c = InkChannel.channelFactory(getType(), ink);
+            c.setName(getName());
+            if(isMax()){
+                c.setMax(NumberFormatter.printDouble(getMax()));
+            }
+            if(isMin()){
+                c.setMin(NumberFormatter.printDouble(getMin()));
+            }
+            c.setIntermittent(isIntermittent());
+            c.setUnits(getUnits());
+            c.setOrientation(getOrientation());
+            if(mapping != null){
+                c.mapping = mapping.clone(ink);
+            }
+            return c;
+        } catch (InkMLComplianceException e) {
+           
+        }
+        return null;
+    }
 }

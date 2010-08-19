@@ -120,9 +120,13 @@ public class NumberFormatter extends Formatter{
     }
 
 
-
+    
 
     protected String valueOf(double d){
+        return NumberFormatter.printDouble(d);
+    }
+    
+    public static String printDouble(double d){
         if(Double.isNaN(d)){
             return "?";
         }
@@ -146,7 +150,7 @@ public class NumberFormatter extends Formatter{
                 wrote = true;
             }
         }
-        if(!result.equals("")){
+        if(!result.isEmpty()){
             result = "."+result;
         }
         if(straight == 0){

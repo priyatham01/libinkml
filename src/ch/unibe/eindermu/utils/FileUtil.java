@@ -8,9 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.regex.Pattern;
-
-import java.util.regex.Matcher;
 
 /**
  * @author emanuel
@@ -116,11 +113,11 @@ public class FileUtil {
      */
     public static String combine(String dir, String name, String ext) {
         String result = "";
-        if(dir != null && !dir.equals("")){
+        if(dir != null && !dir.isEmpty()){
             result += dir+File.separatorChar;
         }
         result += name;
-        if(ext != null && !ext.equals("")){
+        if(ext != null && !ext.isEmpty()){
             result += "."+ext;
         }
         return result;
