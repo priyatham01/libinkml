@@ -21,9 +21,12 @@ import ch.unibe.inkml.util.TraceVisitor;
 import ch.unibe.inkml.util.ViewTreeManipulationException;
 
 
-public class InkTraceViewContainer extends InkTraceView implements Observer,Iterable<InkTraceView> {
+public class InkTraceViewContainer extends InkTraceView implements Observer {
 
-	private List<InkTraceView> content =  new ArrayList<InkTraceView>();
+	public static final String ID_PREFIX = "tg";
+	public static final String INKML_NAME = "traceGroup";
+	
+    private List<InkTraceView> content =  new ArrayList<InkTraceView>();
     private Timespan timespan;
     private TraceBound bounds;
 	
@@ -60,16 +63,21 @@ public class InkTraceViewContainer extends InkTraceView implements Observer,Iter
 		super.buildFromXMLNode(node);
 		
 		for(Node childnode = node.getFirstChild();childnode != null;childnode = childnode.getNextSibling()){
-			if(childnode.getNodeType() != Node.ELEMENT_NODE  || !childnode.getNodeName().equals("traceView")){
+			if(childnode.getNodeType() != Node.ELEMENT_NODE  
+			        || !(childnode.getNodeName().equals(InkTraceViewLeaf.INKML_NAME) || childnode.getNodeName().equals(INKML_NAME))){
+			    if(childnode.getNodeName().equals(InkTraceLeaf.INKML_NAME)){
+			        throw new InkMLComplianceException("libInkML does not support trace elements in trace groups mixed with traceView elements");
+			    }
 				continue;
 			}
 			Element child = (Element) childnode;
+			//create list of child elements if needed. 
 			if(content == null){
 				content = new ArrayList<InkTraceView>();
 			}
-			InkTraceView v = InkTraceView.createTraceView(this.getInk(),this, child);
+			InkTraceView v = InkTraceView.createTraceView(getInk(), this, child);
 			try {
-                this.addTrace(v);
+                addTrace(v);
             } catch (ViewTreeManipulationException e) {
                 e.printStackTrace();
                 throw new InkMLComplianceException("There has been a ViewTreeManipulation exception, this should not happen.");
@@ -81,7 +89,7 @@ public class InkTraceViewContainer extends InkTraceView implements Observer,Iter
 		if(this.isEmpty()){
 			return;
 		}
-		Element traceViewNode = parent.getOwnerDocument().createElement("traceView");
+		Element traceViewNode = parent.getOwnerDocument().createElement(INKML_NAME);
         parent.appendChild(traceViewNode);
         prepairForExport(parent);
         
@@ -286,8 +294,8 @@ public class InkTraceViewContainer extends InkTraceView implements Observer,Iter
      * Returns the iterator over all contained views
      * this method make InkTraceViewContainer comply the Interable interface
      */
-    public Iterator<InkTraceView> iterator() {
-        return this.content.iterator();
+    public Iterator<InkTracePoint> iterator() {
+        return this.pointIterable().iterator();
     }
 
     /**
@@ -387,7 +395,7 @@ public class InkTraceViewContainer extends InkTraceView implements Observer,Iter
     public Iterable<InkTracePoint> pointIterable(){
         return new Iterable<InkTracePoint>() {
             Iterator<InkTracePoint> it  = new Iterator<InkTracePoint> (){
-                private Iterator<InkTraceView> traceIterator = InkTraceViewContainer.this.iterator();
+                private Iterator<InkTraceView> traceIterator = getContent().iterator();
                 private Iterator<InkTracePoint> current = null; 
                 public boolean hasNext() {
                     while(current == null || !current.hasNext()){

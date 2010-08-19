@@ -1,25 +1,26 @@
 package ch.unibe.inkml;
 
-import org.w3c.dom.Element;
+import ch.unibe.inkml.InkChannel.ChannelName;
 
-import ch.unibe.inkml.InkChannel.Name;
+public class InkBind {
+    
+    public static final String INKML_NAME = "bind";
+    public static final String INKML_ATTR_SOURCE = "source";
+    public static final String INKML_ATTR_TARGET = "target";
+    public static final String INKML_ATTR_COLUMN = "column";
+    public static final String INKML_ATTR_VARIABLE = "variable";
+    
 
-public class InkBind extends InkElement {
-
-	public InkBind(InkInk ink) {
-		super(ink);
-	}
-
-	public InkChannel.Name source,target;
+	public InkChannel.ChannelName source,target;
 	public String column,variable;
 
-	public Name getSource(InkTraceFormat format) throws InkMLComplianceException {
+	public ChannelName getSource(InkTraceFormat format) throws InkMLComplianceException {
 		return getValue(null,source,format);
 	}
-	public Name getTarget(Name s, InkTraceFormat format) throws InkMLComplianceException {
+	public ChannelName getTarget(ChannelName s, InkTraceFormat format) throws InkMLComplianceException {
 		return getValue(s,target,format);
 	}		
-	private Name getValue(Name standard, Name value, InkTraceFormat format) throws InkMLComplianceException{
+	private ChannelName getValue(ChannelName standard, ChannelName value, InkTraceFormat format) throws InkMLComplianceException{
 		if(value == null || !format.containsChannel(value)){
 			if(standard != null){
 				return standard;
@@ -35,21 +36,16 @@ public class InkBind extends InkElement {
 	public boolean hasTarget() {
 		return target != null;
 	}
-	public Name getTarget(InkTraceFormat format) throws InkMLComplianceException {
+	public ChannelName getTarget(InkTraceFormat format) throws InkMLComplianceException {
 		return getTarget(null,format);
 	}
 	
-	
-	@Override
-	public void buildFromXMLNode(Element node) throws InkMLComplianceException {
-		// TODO Auto-generated method stub
-
+	public InkBind clone(){
+	    InkBind newBind = new InkBind();
+	    newBind.target = target;
+	    newBind.column = column;
+	    newBind.source = source;
+	    newBind.variable = variable;
+	    return newBind;
 	}
-
-	@Override
-	public void exportToInkML(Element parent) throws InkMLComplianceException {
-		// TODO Auto-generated method stub
-
-	}
-
 }

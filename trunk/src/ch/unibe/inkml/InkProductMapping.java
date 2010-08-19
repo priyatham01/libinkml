@@ -13,7 +13,7 @@ public class InkProductMapping extends InkMapping {
 
 	public InkProductMapping(InkInk ink) {
 		super(ink);
-		// TODO Auto-generated constructor stub
+		mappings = new ArrayList<InkMapping>();
 	}
 
 	@Override
@@ -40,26 +40,6 @@ public class InkProductMapping extends InkMapping {
 			m.exportToInkML(mappingNode);
 		}
 	}
-/*
-	@Override
-	public void transform(InkTracePoint source, InkTracePoint target,
-			InkTraceFormat sourceFormat, InkTraceFormat targetFormat)
-			throws InkMLComplianceException {
-		for(InkMapping m : mappings){
-			m.transform(source, target, sourceFormat, targetFormat);
-		}
-	}
-
-	@Override
-	public void backTransform(InkTracePoint source, InkTracePoint canvasPoint,
-			InkTraceFormat canvasFormat, InkTraceFormat sourceFormat)
-			throws InkMLComplianceException {
-		for(InkMapping m : mappings){
-			m.backTransform(source, canvasPoint, canvasFormat, sourceFormat);
-		}
-		
-	}
-*/
 	@Override
 	public boolean isInvertible() {
 		for(InkMapping m : mappings){
@@ -70,9 +50,6 @@ public class InkProductMapping extends InkMapping {
 		return true;
 	}
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void backTransform(double[][] sourcePoints, double[][] points,
             InkTraceFormat canvasFormat, InkTraceFormat sourceFormat)
@@ -82,9 +59,6 @@ public class InkProductMapping extends InkMapping {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void transform(double[][] sourcePoints, double[][] points,
             InkTraceFormat sourceFormat, InkTraceFormat targetFormat)
@@ -94,4 +68,12 @@ public class InkProductMapping extends InkMapping {
         }
     }
 
+    public InkMapping clone(InkInk ink){
+        InkProductMapping n = (InkProductMapping) super.clone(ink);
+        for(InkMapping m : mappings){
+            n.mappings.add(m.clone(ink));
+        }
+        return n;
+    }
+    
 }

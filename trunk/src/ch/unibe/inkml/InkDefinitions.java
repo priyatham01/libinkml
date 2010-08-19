@@ -9,11 +9,12 @@ import org.w3c.dom.Node;
 
 public class InkDefinitions extends HashMap<String,InkUniqueElement> implements InkElementInterface{
 	
-	/**
-	 * What ever this is for
-	 */
 	private static final long serialVersionUID = -6448563169075416272L;
+
+	public static final String INKML_NAME = "definitions";
+	
 	private List<InkElement> content = new ArrayList<InkElement>();
+	
 	private InkInk ink;
 	
 	public InkDefinitions(InkInk ink) {
@@ -23,6 +24,11 @@ public class InkDefinitions extends HashMap<String,InkUniqueElement> implements 
 	
 	public void put (InkUniqueElement el){
 		put(el.getId(),el);
+	}
+	
+	public void remove(String key){
+	    this.content.remove(get(key));
+	    super.remove(key);
 	}
 	
 	public InkUniqueElement get(String key){
@@ -50,32 +56,32 @@ public class InkDefinitions extends HashMap<String,InkUniqueElement> implements 
 				continue;
 			}
 			String n = child.getNodeName();
-			if(n.equals("inkSource")){
+			if(n.equals(InkInkSource.INKML_NAME)){
 				InkInkSource b = new InkInkSource(this.getInk());
 				b.buildFromXMLNode((Element)child);
 				this.enter(b);
 			}
-			if(n.equals("brush")){
+			if(n.equals(InkBrush.INKML_NAME)){
 				InkBrush b = new InkBrush(this.getInk());
 				b.buildFromXMLNode((Element)child);
 				this.enter(b);
 			}
-			if(n.equals("canvas")){
+			if(n.equals(InkCanvas.INKML_NAME)){
 				InkCanvas c = new InkCanvas(this.getInk());
 				c.buildFromXMLNode((Element)child);
 				this.enter(c);
 			}
-			if(n.equals("canvasTransform")){
+			if(n.equals(InkCanvasTransform.INKML_NAME)){
 				InkCanvasTransform f = new InkCanvasTransform(this.getInk());
 				f.buildFromXMLNode((Element)child);
 				this.enter(f);
 			}
-			if(n.equals("traceFormat")){
+			if(n.equals(InkTraceFormat.INKML_NAME)){
 				InkTraceFormat f = new InkTraceFormat(this.getInk());
 				f.buildFromXMLNode((Element)child);
 				this.enter(f);
 			}
-			if(n.equals("mapping")){
+			if(n.equals(InkMapping.INKML_NAME)){
 				this.enter(InkMapping.mappingFactory(this.getInk(),(Element)child));
 			}
 		}
@@ -83,7 +89,7 @@ public class InkDefinitions extends HashMap<String,InkUniqueElement> implements 
 
 
 	public void exportToInkML(Element parent) throws InkMLComplianceException {
-		Element definitionNode = parent.getOwnerDocument().createElement("definitions");
+		Element definitionNode = parent.getOwnerDocument().createElement(INKML_NAME);
 		parent.appendChild(definitionNode);
 		for(InkElement i : this.content){
 			i.exportToInkML(definitionNode);

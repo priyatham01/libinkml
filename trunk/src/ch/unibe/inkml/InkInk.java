@@ -27,6 +27,8 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 
     public static final Aspect ON_TRACE_REMOVED = new Aspect(){};
 
+    public static final String INKML_NAME = "ink";
+
 
 	/**
 	 * List of traces (leaf or containers) that are direct children of ink (have no parent)
@@ -132,29 +134,39 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 	}
 
 	private void stepNode(Element node) throws InkMLComplianceException{
-		String n = node.getNodeName();
-		if(n.equals("definitions")){
+	    String n = node.getNodeName();
+		if(n.equals(InkDefinitions.INKML_NAME)){
 			definitions = new InkDefinitions(this.getInk());
 			definitions.buildFromXMLNode(node);
 		}else if(n.equals("definition")){ // backwards compatibility for definition-instead-of-definitions bug
 		    definitions = new InkDefinitions(this.getInk());
             definitions.buildFromXMLNode(node);
-		}else if(n.equals("context")){
+		}else if(n.equals(InkContext.INKML_NAME)){
 			InkContext context = new InkContext(this);
 			context.buildFromXMLNode((Element)node);
 			this.getInk().getDefinitions().enter(context);
 			this.getInk().setCurrentContext(context);
-		}else if(n.equals("traceView")){
-			InkTraceView view = InkTraceView.createTraceView(this.getInk(),null,node);
-			addView(view);
+		}else if(n.equals(InkTraceViewLeaf.INKML_NAME)){
+		    addView(InkTraceView.createTraceView(getInk(),null,node));
 		}else if(n.equals("trace")){
 			InkTraceLeaf t = new InkTraceLeaf(this.getInk(),null);
 			t.buildFromXMLNode(node);
 			this.addTrace(t);
 		}else if(n.equals("traceGroup")){
-			InkTraceGroup g = new InkTraceGroup(this.getInk(),null);
-			g.buildFromXMLNode(node);
-			this.addTrace(g);
+		    int traceCount = node.getElementsByTagName("trace").getLength();
+		    int viewCount = node.getElementsByTagName(InkTraceViewLeaf.INKML_NAME).getLength();
+		    if(traceCount > 0 && viewCount > 0){
+		        throw new InkMLComplianceException("libinkml does not support traces and traceViews been mixed within a traceGroup");
+		    }
+		    if(viewCount > 0){
+		        InkTraceViewContainer view = new InkTraceViewContainer(getInk(), null);
+		        view.buildFromXMLNode(node);
+		        addView(view);
+		    }else{
+		        InkTraceGroup g = new InkTraceGroup(this.getInk(),null);
+		        g.buildFromXMLNode(node);
+		        this.addTrace(g);
+		    }
 		}
 	}
 
@@ -244,7 +256,7 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 	}
 
 	public void exportToInkML(org.w3c.dom.Document document2) throws InkMLComplianceException {
-		Element ink = document2.createElement("ink");
+		Element ink = document2.createElement(INKML_NAME);
 		document2.appendChild(ink);
 		this.exportToInkML(ink);
 	}
@@ -312,7 +324,7 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 
 	public static InkInk loadFromXMLDocument(Document document) throws InkMLComplianceException {
 		Node node = document.getDocumentElement();
-		if(node != null && node.getNodeName().equals("ink")){
+		if(node != null && node.getNodeName().equals(INKML_NAME)){
 			InkInk ink = new InkInk();
 			ink.buildFromXMLNode((Element) node);
 			return ink;

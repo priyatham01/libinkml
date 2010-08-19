@@ -380,7 +380,7 @@ public class Config extends Properties{
     
     public boolean getB(String key) {
         String result = getProperty(key);
-        return result.toLowerCase().equals("yes") || result.toLowerCase().equals("on") || result.toLowerCase().equals("1");
+        return result != null && (result.toLowerCase().equals("yes") || result.toLowerCase().equals("on") || result.toLowerCase().equals("1"));
     }
     
     public void set(String key, int value) {

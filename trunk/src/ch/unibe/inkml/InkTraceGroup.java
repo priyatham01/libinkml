@@ -37,7 +37,7 @@ import ch.unibe.inkml.util.TraceBound;
 import ch.unibe.inkml.util.TraceVisitor;
 
 
-public class InkTraceGroup extends InkTrace implements Iterable<InkTrace>{
+public class InkTraceGroup extends InkTrace{
     
 	private String brushRef;
 	
@@ -83,7 +83,7 @@ public class InkTraceGroup extends InkTrace implements Iterable<InkTrace>{
             this.bounds = null;
         } else {
             this.bounds = new TraceBound(this.traces.get(0).getBounds());
-            for(InkTrace s : this) {
+            for(InkTrace s : this.getTraces()) {
                 this.bounds.add(s.getBounds());
             }
         }
@@ -101,15 +101,15 @@ public class InkTraceGroup extends InkTrace implements Iterable<InkTrace>{
         return timespan;
     }
     
-    public Iterator<InkTrace> iterator() {
-        return this.traces.iterator();
+    public Iterator<InkTracePoint> iterator() {
+        return this.pointIterable().iterator();
     }
     
     
     public Iterable<InkTracePoint> pointIterable(){
         return new Iterable<InkTracePoint>() {
             Iterator<InkTracePoint> it  = new Iterator<InkTracePoint> (){
-                private Iterator<InkTrace> traceIterator = InkTraceGroup.this.iterator();
+                private Iterator<InkTrace> traceIterator = getTraces().iterator();
                 private Iterator<InkTracePoint> current = null; 
                 public boolean hasNext() {
                     while(current == null || !current.hasNext()){
@@ -274,7 +274,7 @@ public class InkTraceGroup extends InkTrace implements Iterable<InkTrace>{
 
 	@Override
 	public boolean testFormat(InkTraceFormat canvasTraceFormat) {
-		for(InkTrace t:this){
+		for(InkTrace t : this.getTraces()){
 			if(!t.testFormat(canvasTraceFormat)){
 				return false;
 			}

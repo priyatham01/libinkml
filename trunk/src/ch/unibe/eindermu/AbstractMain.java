@@ -41,6 +41,7 @@ public abstract class AbstractMain implements ConfigurableApplication{
      * @param args
      */
     protected void go(String[] args) {
+        Messenger.add(new CmdLineMessenger(getApplicationName()));
         Config.setInstance(Config.MAIN_INSTANCE,c);
         buildConfig();
         getConfig().addBooleanOption('h', "help","display this help and exit");
@@ -49,7 +50,7 @@ public abstract class AbstractMain implements ConfigurableApplication{
             start();
         } catch(Exception e) {
             e.printStackTrace();
-            showError(getApplicationName()+": "+e.getMessage());
+            Messenger.error(e.getMessage());
             System.exit(1);
         }
     }
@@ -58,14 +59,14 @@ public abstract class AbstractMain implements ConfigurableApplication{
         try {
             getConfig().parseCommandLine(args);
         } catch(IllegalOptionValueException e1) {
-            System.err.println("Unknown option specified "+e1.getMessage());
+            Messenger.error("Unknown option specified "+e1.getMessage());
             System.exit(1);
         } catch(UnknownOptionException e1) {
-            System.err.println(e1.getMessage());
+            Messenger.error(e1.getMessage());
             System.exit(1);
         }
         if(getConfig().getB("help")){
-            System.out.println(getConfig().getHelpString());
+            Messenger.error(getConfig().getHelpString());
             System.exit(0);
         }
     }
@@ -83,13 +84,5 @@ public abstract class AbstractMain implements ConfigurableApplication{
      * which you can retrieve with the getConfig method
      */
     protected abstract void buildConfig();
-
-    /**
-     * If you which you can override this method to show error messages in a GUI or to log them.
-     * @param errormessage
-     */
-    protected void showError(String errormessage) {
-        System.err.println(errormessage);
-    }
     
 }

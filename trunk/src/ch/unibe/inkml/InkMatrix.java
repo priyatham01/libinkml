@@ -8,6 +8,10 @@ import ch.unibe.inkml.util.MatrixCalculator;
 
 public class InkMatrix extends InkUniqueElement {
 
+    public static final String ID_PREFIX = "matrix";
+    public static final String INKML_NAME = "matrix";
+    
+    
 	private double[][] matrix;
 	
 	private double[] translation;
@@ -20,7 +24,7 @@ public class InkMatrix extends InkUniqueElement {
 		super(ink);
 	}
 	
-	public InkMatrix(InkInk ink, String id) {
+	public InkMatrix(InkInk ink, String id) throws InkMLComplianceException {
 		super(ink,id);
 	}
 
@@ -29,12 +33,11 @@ public class InkMatrix extends InkUniqueElement {
 			throws InkMLComplianceException {
 		super.buildFromXMLNode(node);
 		buildMatrix(node.getTextContent());
-		
 	}
 
 	@Override
 	public void exportToInkML(Element parent) throws InkMLComplianceException {
-		Element tableNode = parent.getOwnerDocument().createElement("matrix");
+		Element tableNode = parent.getOwnerDocument().createElement(INKML_NAME);
 		super.exportToInkML(tableNode);
 		tableNode.setTextContent(this.matrixToString());
 		parent.appendChild(tableNode);
@@ -46,14 +49,14 @@ public class InkMatrix extends InkUniqueElement {
 		String[] rows = content.split(",");
 		for(String row : rows){
 			row = row.trim();
-			if(row.equals("")){
+			if(row.isEmpty()){
 				continue;
 			}
 			String[] values = row.split(" ");
 			Vector<Double> vrow = new Vector<Double>();
 			for(String value : values){
 				value = value.trim();
-				if(!value.equals("")){
+				if(!value.isEmpty()){
 					vrow.add(this.loadTableElement(value));
 				}
 			}
@@ -224,5 +227,18 @@ public class InkMatrix extends InkUniqueElement {
             int[] sourceIndices, int[] targetIndices) {
         acutalTransform(targetPoints, sourcePoints, targetIndices, sourceIndices, getInverse());
         
+    }
+    
+    public InkMatrix clone(InkInk ink){
+        InkMatrix im = new InkMatrix(ink);
+        if(matrix != null)
+            im.matrix = matrix.clone();
+        if(inverse != null)
+            im.inverse = inverse.clone();
+        if(translation!=null)
+            im.translation = translation.clone();
+        if(retranslation!=null)
+            im.retranslation = retranslation.clone();
+        return im;
     }
 }

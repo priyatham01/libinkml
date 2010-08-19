@@ -41,10 +41,22 @@ public class StringList extends ArrayList<String> {
     	return true;
     }
     public void addUnique(String s){
+        assert s!=null;
     	if(!this.contains(s)){
     		add(s);
     	}
     }
+    @Override
+    public boolean add(String s){
+        assert s!=null;
+        return super.add(s);
+    }
+    @Override
+    public String set(int index, String s){
+        assert s!=null;
+        return super.set(index,s);
+    }
+
 
     public String join(String separator) {
         String result = "";

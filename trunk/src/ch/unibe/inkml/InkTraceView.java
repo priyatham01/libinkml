@@ -2,18 +2,14 @@ package ch.unibe.inkml;
 
 import java.awt.Point;
 import java.awt.geom.Point2D;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.w3c.dom.Element;
 
-import ch.unibe.eindermu.euclidian.Vector;
 import ch.unibe.eindermu.utils.Aspect;
-import ch.unibe.eindermu.utils.NotImplementedException;
 import ch.unibe.eindermu.utils.Observable;
 import ch.unibe.inkml.util.Timespan;
 import ch.unibe.inkml.util.TraceBound;
@@ -77,19 +73,6 @@ public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements
 	private InkTraceViewContainer parent;
 	
 	/**
-	 * This map stores events which occured within the TraceView tree under this element.
-	 */
-    private Map<Integer, TreeEvent> pendingEvents;
-    
-    /**
-     * This integer keeps track of manipulation to any TraceView tree in a VM (which makes this code not
-     * thread safe). Events are released only if the initial manipulation returns, but not if sub-manipulations
-     * are finished.
-     * @TODO This has to be changed in order to be thread safe. 
-     */
-	private static int maniputionStackLevel;
-	
-	/**
 	 * Creates a TraceView element from a InkML(XML)-node. This factory method distinguish between 
 	 * a leaf element (which refer to a trace) and a non-leaf element (which contains other TraceViews).  
 	 * @param ink Ink is the ink document, this trace view belongs to.
@@ -100,28 +83,56 @@ public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements
 	 */
 	public static InkTraceView createTraceView(InkInk ink, InkTraceViewContainer parent, Element node) throws InkMLComplianceException{
 		InkTraceView result = null;
-		if(node.hasAttribute("traceDataRef")){
-			String traceDataRef = node.getAttribute("traceDataRef").replace("#", "");
-			InkTrace l = (InkTrace)ink.getDefinitions().get(traceDataRef);
+		if(node.getNodeName().equals(InkTraceViewContainer.INKML_NAME)){
+		    if(node.getElementsByTagName(InkTraceLeaf.INKML_NAME).getLength()>0){
+		        throw new InkMLComplianceException("libInkML does not support trace elements in trace groups mixed with traceView elements");
+		    }
+		    result = new InkTraceViewContainer(ink,parent);
+		}else
+		if(node.getNodeName().equals(InkTraceViewLeaf.INKML_NAME) && node.hasAttribute(InkTraceViewLeaf.INKML_ATTR_TRACEDATA_REF)){ // is allways the case
+			String traceDataRef = node.getAttribute(InkTraceViewLeaf.INKML_ATTR_TRACEDATA_REF).replace("#", "");
+			InkTraceLike l = (InkTraceLike)ink.getDefinitions().get(traceDataRef);
 			if(l.isView()){
-				throw new NotImplementedException();
-			}else if(l.isLeaf()){
-				result = new InkTraceViewLeaf(ink,parent);
+				throw new InkMLComplianceException("libInkML does not support traceView referencing to traceViews yet.");
 			}else{
-				result = new InkTraceViewContainer(ink,parent);
+				result = new InkTraceViewLeaf(ink,parent);
 			}
-		}else{
+		}else 
+	    if(node.getNodeName().equals(InkTraceViewLeaf.INKML_NAME)){
+		    //System.err.println("Warning: Depricated use of traceView as container element. Its treated as traceGroup. Please use traceGroup instead.");
 			result = new InkTraceViewContainer(ink,parent);
+		}else{
+		    throw new InkMLComplianceException(String.format("Unexpected node with name '%s' discovered in traceView context.",node.getNodeName()) );
 		}
 		result.buildFromXMLNode(node);
 		return result;
 	}
 	
-	/*
-	public boolean isView(){
-		return true;
-	}
-	*/
+	
+    
+    public static InkTraceView getCommonAncestor(List<? extends InkTraceView> traces){
+        List<InkTraceView> l = new ArrayList<InkTraceView>();
+        {
+            InkTraceView current = traces.get(0);
+            while(current != null) {
+                l.add(current);
+                current = current.getParent();
+            }
+        }
+        int pi = 0;
+        for(int i = 1;i<traces.size();i++){
+            InkTraceView current = traces.get(i);
+            while(current != null) {
+                if(l.contains(current)){
+                    int npi = l.indexOf(current);
+                    pi = Math.max(npi, pi);
+                    break;
+                }
+                current = current.getParent();
+            }
+        }
+        return l.get(pi);
+    }
 	
 	
 	/**
@@ -142,6 +153,21 @@ public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements
 		super(ink);
 	}
 
+	
+	/**
+     * Of this and an other TraceLike objects the nearest common ancestor is returned.
+     * If both traceLike objects are not in the same tree, null is returned.
+     * @param other The other trace like object
+     * @return The nearest common ancestor, null if there is none
+     */
+    public InkTraceView getCommonAncestor(InkTraceView other) {
+        List<InkTraceView> l = new ArrayList<InkTraceView>();
+        l.add(this);
+        l.add(other);
+        return InkTraceView.getCommonAncestor(l);
+    }
+    
+	
     /**
 	 * Sets the view tree parent to this view. If this view
 	 * has already a parent, this view gets removed from that former parent.
@@ -189,7 +215,7 @@ public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements
 	}
 	
 	/**
-	 * Calculates the istance between the represented traces and the point p.
+	 * Calculates the distance between the represented traces and the point p.
 	 * @param p Point
 	 * @return distance values
 	 */
@@ -221,20 +247,6 @@ public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements
 	 * Returns true if this object is a leaf in the TraceViewTree (leafs are represented by the InkTraceViewLeaf class).
 	 */
 	public abstract boolean isLeaf();
-
-	/**
-	 * turns this view into a string. 
-	 * @deprecated this is application specific.
-	 */
-	public String toString(){
-		if(this.containsAnnotation("transcription")){
-			return this.getAnnotation("transcription");
-		}else if(this.isRoot()){
-			return "root";
-		}else{
-			return "";
-		}
-	}
 
 	/**
 	 * return true if this element is the root in a TraceView tree.
@@ -324,13 +336,6 @@ public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements
 	public abstract boolean isEmpty();
     
 
-	/**
-	 * @TODO clean up the tree.
-	 */
-	private void cleanUp() {
-		// TODO Auto-generated method stub
-		
-	}
 	/**
 	 * Tree events are used to indicate manipulations of the tree.
 	 * @author emanuel

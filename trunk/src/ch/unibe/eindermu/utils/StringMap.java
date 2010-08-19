@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.Vector;
 
 public class StringMap<V> implements Map<String, V>, Iterable<V> {
 
@@ -35,7 +38,7 @@ public class StringMap<V> implements Map<String, V>, Iterable<V> {
 
     @Override
 	public Set<java.util.Map.Entry<String, V>> entrySet() {
-	    Set<java.util.Map.Entry<String, V>> result = new HashSet<Entry<String,V>>();
+        Set<java.util.Map.Entry<String, V>> result = new LinkedHashSet<java.util.Map.Entry<String, V>>();
 		for(int i = 0; i<keys.size();i++){
 			result.add(new StringEntry<V>(keys.get(i),values.get(i)));
 		}

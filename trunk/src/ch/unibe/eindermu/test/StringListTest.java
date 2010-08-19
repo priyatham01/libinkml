@@ -15,7 +15,6 @@ import ch.unibe.eindermu.utils.StringList;
 public class StringListTest {
     private StringList ezdv = new StringList();
     
-    @SuppressWarnings("unused")
     @Before
     public void init(){
         ezdv = new StringList();

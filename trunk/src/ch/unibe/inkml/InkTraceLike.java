@@ -1,13 +1,11 @@
 package ch.unibe.inkml;
 
+import java.awt.Point;
 import java.awt.Polygon;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.w3c.dom.Element;
 
-import ch.unibe.eindermu.euclidian.Vector;
 import ch.unibe.inkml.util.Timespan;
 import ch.unibe.inkml.util.TraceBound;
 import ch.unibe.inkml.util.TraceVisitor;
@@ -33,7 +31,7 @@ import ch.unibe.inkml.util.TraceVisitor;
  */
 
 
-public abstract class InkTraceLike<C extends InkTraceLike<C>> extends InkAnnotatedElement {
+public abstract class InkTraceLike<C extends InkTraceLike<C>> extends InkAnnotatedElement implements Iterable<InkTracePoint>{
 
 	
 	private InkContext currentContext;
@@ -53,8 +51,9 @@ public abstract class InkTraceLike<C extends InkTraceLike<C>> extends InkAnnotat
 	 * Constructor with enclosing ink object and id.
 	 * @param ink
 	 * @param id
+	 * @throws InkMLComplianceException 
 	 */
-	public InkTraceLike(InkInk ink, String id) {
+	public InkTraceLike(InkInk ink, String id) throws InkMLComplianceException {
 		super(ink, id);
 		this.initialize();
 	}
@@ -101,7 +100,7 @@ public abstract class InkTraceLike<C extends InkTraceLike<C>> extends InkAnnotat
 	}
     
 	/**
-	 * Returns the context (global or local), which applicable to this object.
+	 * Returns the context (global or local), which is applicable to this object.
 	 * @return
 	 */
     public InkContext getContext() {
@@ -110,7 +109,7 @@ public abstract class InkTraceLike<C extends InkTraceLike<C>> extends InkAnnotat
 		}else if(!this.isRoot()){
 			return this.getParent().getContext();
 		}else{
-			return this.currentContext;
+			return this.getCurrentContext();
 		}
 	}
 	
@@ -122,7 +121,9 @@ public abstract class InkTraceLike<C extends InkTraceLike<C>> extends InkAnnotat
 	}
     
     /**
-     * Sets the current global context of this object (which can be overwritten by the local context)
+     * Sets the current global context of this object (which can be overwritten by the local context).
+     * Each TraceLike element must have a currentContext. If no one is specified then the DefaultContext have
+     * to be set.
      */
 	public void setCurrentContext(InkContext context) {
 		this.currentContext = context;
@@ -170,42 +171,7 @@ public abstract class InkTraceLike<C extends InkTraceLike<C>> extends InkAnnotat
     }
 
 
-    /**
-     * Of this and an other TraceLike objects the nearest common ancestor is returned.
-     * If both traceLike objects are not in the same tree, null is returned.
-     * @param other The other trace like object
-     * @return The nearest common ancestor, null if there is none
-     */
-    public C getCommonAncestor(C other) {
-    	//ancestor lists 
-        List<C> tl = new ArrayList<C>();
-        List<C> ol = new ArrayList<C>();
-        
-        C current = (C) this;
-        while(current != null) {
-            tl.add(current);
-            current = (C) current.getParent();
-        }
-        
-        current = other;
-        while(current != null) {
-            tl.add(current);
-            current = (C) current.getParent();
-        }
-        
-        int c = Integer.MAX_VALUE;
-        current = null;
-        for(int i = 0; i < tl.size(); i++) {
-            for(int j = 0; j < ol.size(); j++) {
-                if(tl.get(i) == ol.get(j) && c > i + j) {
-                    c = i + j;
-                    current = tl.get(i);
-                }
-            }
-        }
-        return (current == null) ? this.getRoot() : current;
-    }
-    
+  
     /**
      * @return True if this is object inherits from InkTraceView rather than InkTrace
      */
@@ -233,6 +199,15 @@ public abstract class InkTraceLike<C extends InkTraceLike<C>> extends InkAnnotat
         return InkTracePoint.getPolygon(this.getPoints());
     }
 
+    /**
+     * Returns the distance between p and the nearest point in this trace
+     * @param p other point
+     * @return euclidian distance
+     */
+    public double distance(Point p) {
+        return InkTracePoint.distanceToPoint(this, p);
+    }
+    
     /**
      * @param from
      * @param to

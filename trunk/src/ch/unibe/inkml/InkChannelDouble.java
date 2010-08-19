@@ -2,7 +2,6 @@ package ch.unibe.inkml;
 
 import org.w3c.dom.Element;
 
-
 import ch.unibe.inkml.util.Formatter;
 import ch.unibe.inkml.util.NumberFormatter;
 
@@ -32,7 +31,7 @@ public class InkChannelDouble extends InkChannel {
 
 	@Override
 	public void setDefaultValue(String defaultValue) {
-		if(!defaultValue.equals("")){
+		if(!defaultValue.isEmpty()){
 			this.defaultValue = Double.parseDouble(defaultValue);
 		}else{
 			this.defaultValue = 0;
@@ -52,21 +51,21 @@ public class InkChannelDouble extends InkChannel {
 
 	@Override
 	public void setMax(String max) {
-		if(!max.equals("")){
+		if(!max.isEmpty()){
 			this.max = Double.parseDouble(max);
-			this.maxSet = true;
+			this.isMax = true;
 		}else{
-			this.maxSet = false;
+			this.isMax = false;
 		}
 	}
 
 	@Override
 	public void setMin(String min) {
-		if(!min.equals("")){
+		if(!min.isEmpty()){
 			this.min = Double.parseDouble(min);
-			this.minSet = true;
+			this.isMin = true;
 		}else{
-			this.minSet = false;
+			this.isMin = false;
 		}
 	}
 

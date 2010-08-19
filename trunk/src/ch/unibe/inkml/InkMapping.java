@@ -6,10 +6,15 @@ import java.util.List;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import ch.unibe.inkml.InkChannel.Name;
+import ch.unibe.inkml.InkChannel.ChannelName;
 
 abstract public class InkMapping extends InkUniqueElement {
 
+    public static final String INKML_NAME = "mapping";
+    public static final String INKML_ATTR_TYPE = "type";
+    public static final String INKML_ATTR_MAPPING_REF = "mappingRef";
+
+    
 	public enum Type{IDENTITY,LOOKUP,AFFINE,MATHML,PRODUCT,UNKOWN;
 		public String toString(){
 			return super.toString().toLowerCase();
@@ -22,13 +27,15 @@ abstract public class InkMapping extends InkUniqueElement {
 			}
 			return null;
 		}
-	};
+	}
+
+    
 	
 	
 	public static InkMapping mappingFactory(InkInk ink,Element node) throws InkMLComplianceException{
 		Type type = null;
-		if(node.hasAttribute("type")){
-			type = Type.getValue(node.getAttribute("type"));
+		if(node.hasAttribute(INKML_ATTR_TYPE)){
+			type = Type.getValue(node.getAttribute(INKML_ATTR_TYPE));
 		}
 		if(type == null){
 			type = Type.UNKOWN;
@@ -58,7 +65,7 @@ abstract public class InkMapping extends InkUniqueElement {
 
 	private List<InkBind> binds;
 
-//	private List<InkMapping> mappings;
+	
 	
 	public InkMapping(InkInk ink) {
 		super(ink);
@@ -77,20 +84,20 @@ abstract public class InkMapping extends InkUniqueElement {
 	protected void loadBinds(Element node) {
 		this.binds = new ArrayList<InkBind>();
 		for (Node child = node.getFirstChild(); child != null;child = child.getNextSibling()){
-			if(child.getNodeName().equals("bind")){
+			if(child.getNodeName().equals(InkBind.INKML_NAME)){
 				Element el = (Element)child;
-				InkBind b = new InkBind(getInk());
-				if(!el.getAttribute("source").equals("")){
-					b.source = Name.valueOf(el.getAttribute("source"));
+				InkBind b = new InkBind();
+				if(!el.getAttribute(InkBind.INKML_ATTR_SOURCE).isEmpty()){
+					b.source = ChannelName.valueOf(el.getAttribute(InkBind.INKML_ATTR_SOURCE));
 				}
-				if(!el.getAttribute("target").equals("")){
-					b.target = Name.valueOf(el.getAttribute("target"));
+				if(!el.getAttribute(InkBind.INKML_ATTR_TARGET).isEmpty()){
+					b.target = ChannelName.valueOf(el.getAttribute(InkBind.INKML_ATTR_TARGET));
 				}
-				if(!el.getAttribute("column").equals("")){
-					b.column = el.getAttribute("column");
+				if(!el.getAttribute(InkBind.INKML_ATTR_COLUMN).isEmpty()){
+					b.column = el.getAttribute(InkBind.INKML_ATTR_COLUMN);
 				}
-				if(!el.getAttribute("variable").equals("")){
-					b.variable = el.getAttribute("variable");
+				if(!el.getAttribute(InkBind.INKML_ATTR_VARIABLE).isEmpty()){
+					b.variable = el.getAttribute(InkBind.INKML_ATTR_VARIABLE);
 				}
 				this.binds.add(b);
 			}
@@ -102,11 +109,11 @@ abstract public class InkMapping extends InkUniqueElement {
 
 	@Override
 	public void exportToInkML(Element parent) throws InkMLComplianceException {
-		Element mappingNode = parent.getOwnerDocument().createElement("mapping");
+		Element mappingNode = parent.getOwnerDocument().createElement(INKML_NAME);
 		super.exportToInkML(mappingNode);
 		parent.appendChild(mappingNode);
 		if(this.getType()!= Type.UNKOWN){
-			mappingNode.setAttribute("type", this.getType().toString());
+			mappingNode.setAttribute(INKML_ATTR_TYPE, this.getType().toString());
 		}
 		saveBinds(mappingNode);
 		exportToInkMLHook(mappingNode);
@@ -116,18 +123,18 @@ abstract public class InkMapping extends InkUniqueElement {
 
 	protected void saveBinds(Element mappingNode) {
 		for(InkBind bind : binds){
-			Element bindNode = mappingNode.getOwnerDocument().createElement("bind");
+			Element bindNode = mappingNode.getOwnerDocument().createElement(InkBind.INKML_NAME);
 			if(bind.hasSource()){
-				bindNode.setAttribute("source", bind.source.toString());
+				bindNode.setAttribute(InkBind.INKML_ATTR_SOURCE, bind.source.toString());
 			}
 			if(bind.hasTarget()){
-				bindNode.setAttribute("target", bind.target.toString());
+				bindNode.setAttribute(InkBind.INKML_ATTR_TARGET, bind.target.toString());
 			}
-			if(bind.column!= null && !bind.column.equals("")){
-				bindNode.setAttribute("column", bind.column);
+			if(bind.column!= null && !bind.column.isEmpty()){
+				bindNode.setAttribute(InkBind.INKML_ATTR_COLUMN, bind.column);
 			}
-			if(bind.variable!= null && !bind.variable.equals("")){
-				bindNode.setAttribute("variable", bind.variable);
+			if(bind.variable!= null && !bind.variable.isEmpty()){
+				bindNode.setAttribute(InkBind.INKML_ATTR_VARIABLE, bind.variable);
 			}
 			mappingNode.appendChild(bindNode);
 		}
@@ -144,9 +151,9 @@ abstract public class InkMapping extends InkUniqueElement {
 			int i = 0, x = 0, y = 0;
 			for(InkBind b : mapping.binds){
 				if(b.hasTarget()){
-					if(b.target == Name.X){
+					if(b.target == ChannelName.X){
 						x = i++;
-					}else if(b.target == Name.Y){
+					}else if(b.target == ChannelName.Y){
 						y = i++;
 					}
 				}
@@ -158,7 +165,7 @@ abstract public class InkMapping extends InkUniqueElement {
 		}
 	}
 	
-	public static InkMapping invertAxis(InkMapping mapping,InkTraceFormat source, InkTraceFormat target, Name axis) {
+	public static InkMapping invertAxis(InkMapping mapping,InkTraceFormat source, InkTraceFormat target, ChannelName axis) {
 		switch (mapping.getType()) {
 			case IDENTITY:	
 				InkMapping id = InkAffineMapping.createIdentityInkAffinMapping(mapping.getInk(), source, target);
@@ -208,6 +215,14 @@ abstract public class InkMapping extends InkUniqueElement {
     public abstract void backTransform(double[][] sourcePoints, double[][] points,
             InkTraceFormat canvasFormat, InkTraceFormat sourceFormat) throws InkMLComplianceException;
 
+    
+    public InkMapping clone(InkInk ink){
+        InkMapping newMapping = InkMapping.mappingFactory(ink, getType());
+        for(InkBind bind : binds){
+            newMapping.addBind(bind.clone());
+        }
+        return newMapping;
+    }
 	
 
 }

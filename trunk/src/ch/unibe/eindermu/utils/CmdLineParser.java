@@ -433,6 +433,9 @@ public class CmdLineParser{
      */
     public final Vector<Object> getOptionValues(Option option) {
         Vector<Object> result = new Vector<Object>();
+        if(values.get(option.longForm()) == null){
+            return result;
+        }
         for(Object o: values.get(option.longForm())){
             result.addElement(o);
         }
