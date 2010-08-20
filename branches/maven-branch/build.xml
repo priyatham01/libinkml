@@ -1,0 +1,50 @@
+<project name="libInkML" default="jar" basedir=".">
+    <description>
+        Library modeling the InkML specification
+    </description>
+    <!-- set global properties for this build -->
+    <property file="build.properties" />
+    
+    <target name="dirs">
+        <mkdir dir="${build}"/>
+    </target>
+
+    <target name="javadoc">
+        <javadoc access="package" author="true" destdir="doc" doctitle="libInkML" 
+                 nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" 
+                 notree="false" packagenames="ch.unibe.inkml.util,ch.unibe.inkml" source="1.5" 
+                 sourcepath="src" splitindex="true" use="true" version="true"
+                 Encoding="utf-8" docencoding="utf-8"
+                 additionalparam="-J-DproxyHost=proxy.unibe.ch -J-DproxyPort=80">
+            <link href="file:doc/"/>
+            <link href="http://java.sun.com/javase/6/docs/api/"/>
+        </javadoc>
+    </target>
+
+    <target name="compile" depends="dirs" description="compile the source files">
+        <javac srcdir="${src}" destdir="${build}" encoding="utf-8" debug="true">
+            <exclude name="ch/unibe/eindermu/test/*"/>
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile,manifest">
+        <jar destfile="${name}.jar" basedir="${build}" manifest="MANIFEST.MF">
+            <fileset dir="${src}">
+            	<exclude name="ch/unibe/eindermu/test/*"/>
+        	</fileset>
+        </jar>
+    </target>
+	
+	<target name="manifest">
+	      <manifest file="MANIFEST.MF">
+	        <attribute name="Built-By" value="${user.name}"/>
+	      </manifest>
+	</target>
+	
+    <target name="clean">
+        <delete dir="${build}"/>
+        <delete file="${name}.jar"/>
+        <delete file="${dist}.zip"/>
+        <delete file="MANIFEST.MF"/>
+    </target>
+</project>
