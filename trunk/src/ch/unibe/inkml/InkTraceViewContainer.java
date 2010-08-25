@@ -438,6 +438,9 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
     @Override
     public Timespan getTimeSpan() {
     	if(timespan == null){
+    		if(isEmpty()){
+    			return null;
+    		}
     		for(InkTraceView v : this.content){
     			if(timespan == null){
     				if(v.getTimeSpan() != null){
@@ -476,7 +479,7 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
 	 * {@inheritDoc}
 	 */
     public boolean isEmpty(){
-    	return this.content.isEmpty();
+    	return this.content == null || this.content.isEmpty();
     }
     
 

@@ -169,12 +169,25 @@ public class InkMatrix extends InkUniqueElement {
 			matrix[x][i] = matrix[y][i];
 			matrix[y][i] = tmp;
 		}
+		
+		if(translation != null){
+			tmp = translation[x];
+			translation[x] = translation[y];
+			translation[y] = tmp;
+		}
+		
+		retranslation = null;
 		inverse = null;
 	}
+	
 	public void invertAxis(int axis){
 		for(int i = 0;i < matrix[axis].length;i++){
 			matrix[axis][i] = -matrix[axis][i];
 		}
+		if(translation != null){
+			translation[axis] = -translation[axis];
+		}
+		retranslation = null;
 		inverse = null;
 	}
 
@@ -192,12 +205,22 @@ public class InkMatrix extends InkUniqueElement {
      * @param matrix
      */
     private void acutalTransform(double[][] operand, double[][] product,
-            int[] oI, int[] pI,double[][] matrix) {
-        for(int i = 0;i<operand.length;i++){
-            for(int y = 0;y<matrix.length;y++){
+            int[] oI, int[] pI,double[] productTranslation, double[] operandTranslation, double[][] matrix) {
+    	double[] opv = new double[matrix[0].length];
+        for(int i = 0;i<operand.length;i++){//iterate over all vectors
+        	for(int x = 0;x<matrix[0].length;x++){// iterate over all elements of operand vextor;
+                opv[x] = operand[i][oI[x]];
+                if(operandTranslation != null){
+                	opv[x] += operandTranslation[x];
+                }
+            }
+            for(int y = 0;y<matrix.length;y++){ //iterate over all elements of product vectors
                 product[i][pI[y]] = 0;
-                for(int x = 0;x<matrix[y].length;x++){
-                    product[i][pI[y]] += operand[i][pI[x]] * matrix[y][x]; 
+                for(int x = 0;x<matrix[y].length;x++){// iterate over all elements of operand vextor;
+                    product[i][pI[y]] += opv[x] * matrix[y][x]; 
+                }
+                if(productTranslation!= null){
+                	product[i][pI[y]] += productTranslation[y];
                 }
             }
         }
@@ -214,7 +237,7 @@ public class InkMatrix extends InkUniqueElement {
      */
     public void transform(double[][] sourcePoints, double[][] targetPoints,
             int[] sourceIndices, int[] targetIndices) {
-        acutalTransform(sourcePoints, targetPoints, sourceIndices, targetIndices, matrix);
+        acutalTransform(sourcePoints, targetPoints, sourceIndices, targetIndices,translation, null, matrix);
     }
 
     /**
@@ -225,7 +248,8 @@ public class InkMatrix extends InkUniqueElement {
      */
     public void backtransform(double[][] sourcePoints, double[][] targetPoints,
             int[] sourceIndices, int[] targetIndices) {
-        acutalTransform(targetPoints, sourcePoints, targetIndices, sourceIndices, getInverse());
+    	double [][] inverse = getInverse();
+    	acutalTransform(targetPoints, sourcePoints, targetIndices, sourceIndices, null, retranslation, inverse);
         
     }
     
@@ -241,4 +265,8 @@ public class InkMatrix extends InkUniqueElement {
             im.retranslation = retranslation.clone();
         return im;
     }
+
+	public double[] getTranslation() {
+		return translation;
+	}
 }
