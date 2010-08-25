@@ -143,6 +143,9 @@ public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements
 	public InkTraceView(InkInk ink,InkTraceViewContainer parent) {
 		this(ink);
 		this.setParent(parent);
+		if(parent != null){
+			parent.addTrace(this);
+		}
 	}
 
 	/**

@@ -15,25 +15,31 @@ public class InkAffineMapping extends InkMapping {
 
 	public static InkAffineMapping createIdentityInkAffinMapping(InkInk ink,InkTraceFormat sourceFormat, InkTraceFormat targetFormat){
 		InkAffineMapping map = new InkAffineMapping(ink);
-		int count = 0;
-		for(InkChannel c : sourceFormat.getChannels()){
-			if(!targetFormat.containsChannel(c.getName())){
-				continue;
-			}
-			count++;
-			InkBind b = new InkBind();
-			b.source = c.getName();
-			map.addBind(b);
-		
+		int sCount = 0;
+		int tCount = 0;
+		for(InkChannel c : targetFormat.getChannels()){
+			tCount++;
 			InkBind bt = new InkBind();
 			bt.target = c.getName();
 			map.addBind(bt);
+			if(sourceFormat.containsChannel(c.getName())){
+				sCount ++;
+				InkBind b = new InkBind();
+				b.source = c.getName();
+				map.addBind(b);
+			}
 		}
 		InkMatrix m = new InkMatrix(ink);
-		double[][] fm = new double[count][count];
-		double[] tr = new double[count];
-		for(int i = 0;i<count;i++){
-			fm[i][i] = 1;
+		
+		double[][] fm = new double[tCount][sCount];
+		double[] tr = new double[tCount];
+
+		for(InkChannel c : targetFormat.getChannels()){
+			if(sourceFormat.containsChannel(c.getName())){
+				fm[map.getTargetIndex(targetFormat, c.getName())][map.getSourcetIndex(sourceFormat, c.getName())] = 1;
+			}else{
+				tr[map.getTargetIndex(targetFormat, c.getName())] = Double.NaN;
+			}
 		}
 		m.setMatrix(fm,tr);
 		map.matrix = m;
@@ -75,7 +81,7 @@ public class InkAffineMapping extends InkMapping {
      * @return
 	 * @throws InkMLComplianceException 
      */
-    private InkChannel.ChannelName[] getTargetNames(InkTraceFormat targetFormat) throws InkMLComplianceException {
+    private InkChannel.ChannelName[] getTargetNames(InkTraceFormat targetFormat) {
         if(cached_targetFormat != targetFormat){
             cached_targetFormat = targetFormat;
             ArrayList<InkBind> l= new ArrayList<InkBind>();
@@ -99,18 +105,18 @@ public class InkAffineMapping extends InkMapping {
      * @return
 	 * @throws InkMLComplianceException 
      */
-    private InkChannel.ChannelName[] getSourceNames(InkTraceFormat sourceFormat) throws InkMLComplianceException {
+    private InkChannel.ChannelName[] getSourceNames(InkTraceFormat sourceFormat){
         if(cached_sourceFormat != sourceFormat){
             cached_sourceFormat = sourceFormat;
-            ArrayList<InkBind> l= new ArrayList<InkBind>();
+            ArrayList<InkBind> binds= new ArrayList<InkBind>();
             for(InkBind b : this.getBinds()){
                 if(b.hasSource()){
-                    l.add(b);
+                    binds.add(b);
                 }
             }
-            sourceChanneName = new InkChannel.ChannelName[l.size()];
+            sourceChanneName = new InkChannel.ChannelName[binds.size()];
             for(int i = 0;i<sourceChanneName.length;i++){
-                sourceChanneName[i] = l.get(i).getSource(sourceFormat); 
+                sourceChanneName[i] = binds.get(i).getSource(sourceFormat); 
             }
         }
         return sourceChanneName;
@@ -118,9 +124,12 @@ public class InkAffineMapping extends InkMapping {
     
 
     public double[][] getMatrix() {
-		return this.matrix.getMatrix();
+		return matrix.getMatrix();
 	}
 
+    public double[] getTranslationVector(){
+    	return matrix.getTranslation();
+    }
 
 	public int getTargetD() {
 		if(targetNr == 0){
@@ -167,18 +176,47 @@ public class InkAffineMapping extends InkMapping {
     @Override
     public void transform(double[][] sourcePoints, double[][] targetPoints,
             InkTraceFormat sourceFormat, InkTraceFormat targetFormat) throws InkMLComplianceException {
-        ChannelName[] sourceNames = getSourceNames(sourceFormat);
-        int[] sourceIndices = new int[sourceNames.length];
-        for(int i=0;i<sourceNames.length;i++){
-            sourceIndices[i] = sourceFormat.indexOf(sourceNames[i]);
-        }
-        ChannelName[] targetNames = getTargetNames(targetFormat);
-        int[] targetIndices = new int[targetNames.length];
+        this.matrix.transform(sourcePoints,targetPoints,getSourceIndices(sourceFormat),getTargetIndices(targetFormat));
+    }
+    
+    private int[] getTargetIndices(InkTraceFormat targetFormat) throws InkMLComplianceException{
+    	ChannelName[] targetNames = getTargetNames(targetFormat);
+    	int[] targetIndices = new int[targetNames.length];
         for(int i=0;i<targetNames.length;i++){
             targetIndices[i] = targetFormat.indexOf(targetNames[i]);
         }
-        this.matrix.transform(sourcePoints,targetPoints,sourceIndices,targetIndices);
+        return targetIndices;
     }
+    
+    private int[] getSourceIndices(InkTraceFormat sourceFormat) throws InkMLComplianceException{
+    	ChannelName[] sourceNames = getSourceNames(sourceFormat);
+    	int[] sourceIndices = new int[sourceNames.length];
+        for(int i=0;i<sourceNames.length;i++){
+        	sourceIndices[i] = sourceFormat.indexOf(sourceNames[i]);
+        }
+        return sourceIndices;
+    }
+    
+    public int getTargetIndex(InkTraceFormat targetFormat,ChannelName name){
+    	ChannelName[] targetNames = getTargetNames(targetFormat);
+    	for(int i=0;i<targetNames.length;i++){
+    		if(targetNames[i] == name){
+    			return i;
+    		}
+        }
+    	throw new Error(); // will not occure;
+    }
+    
+    public int getSourcetIndex(InkTraceFormat sourceFormat,ChannelName name){
+    	ChannelName[] sourcetNames = getSourceNames(sourceFormat);
+    	for(int i=0;i<sourcetNames.length;i++){
+    		if(sourcetNames[i] == name){
+    			return i;
+    		}
+        }
+    	throw new Error(); // will not occure;
+    }
+    
     
     public InkMapping clone(InkInk ink){
         InkAffineMapping n = (InkAffineMapping) super.clone(ink);

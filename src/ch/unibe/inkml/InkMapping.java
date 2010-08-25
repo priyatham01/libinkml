@@ -152,10 +152,11 @@ abstract public class InkMapping extends InkUniqueElement {
 			for(InkBind b : mapping.binds){
 				if(b.hasTarget()){
 					if(b.target == ChannelName.X){
-						x = i++;
+						x = i;
 					}else if(b.target == ChannelName.Y){
-						y = i++;
+						y = i;
 					}
+					i++;
 				}
 			}
 			((InkAffineMapping)mapping).getInkMatrix().flipAxis(x,y);

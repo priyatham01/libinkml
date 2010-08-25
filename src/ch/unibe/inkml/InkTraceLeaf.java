@@ -66,12 +66,10 @@ public class InkTraceLeaf extends InkTrace {
     /**
      * trace points, how they are stored in InkML
      */
-    //private List<InkTracePoint> sourcePoints = new LinkedList<InkTracePoint>();
     private double[][] sourcePoints;
     /**
      * trace points, how they are displayed in the canvas
      */
-    //private List<InkTracePoint> points = new LinkedList<InkTracePoint>();
     private double[][] points;
     
     private int size = 0;
@@ -598,7 +596,15 @@ public class InkTraceLeaf extends InkTrace {
      * @return the InkTraaceViewLeaf
      */
     public InkTraceViewLeaf createView() {
-        final InkTraceViewLeaf i = new InkTraceViewLeaf(this.getInk(), null);
+    	return createView(null);
+    }
+    /**
+     * Returns an {@link InkTraceViewLeaf} representing all points contained by this trace
+     * @param parent The traceView which will contain the new traceView
+     * @return the InkTraceViewLeaf
+     */
+    public InkTraceViewLeaf createView(InkTraceViewContainer parent) {
+        InkTraceViewLeaf i = new InkTraceViewLeaf(this.getInk(), parent);
         i.setTraceDataRef(this.getIdNow(ID_PREFIX));
         return i;
     }
@@ -662,7 +668,7 @@ public class InkTraceLeaf extends InkTrace {
      */
     private void transform() throws InkMLComplianceException{
         if(points == null){
-            points = new double[size][sourcePoints[0].length];
+            points = new double[size][getTargetFormat().getChannelCount()];
         }
         getCanvasTransform().transform(sourcePoints, points,getSourceFormat(), getTargetFormat());
         notifyObserver(ON_CHANGE);

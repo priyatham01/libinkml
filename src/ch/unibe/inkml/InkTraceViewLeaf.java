@@ -172,7 +172,10 @@ public class InkTraceViewLeaf extends InkTraceView {
 	 */
 	@SuppressWarnings("unchecked")
     public InkTraceLike getTrace() {
-		return (InkTraceLike) this.getInk().getDefinitions().get(this.getTraceDataRef());
+		if(!isEmpty()){
+			return (InkTraceLike) this.getInk().getDefinitions().get(this.getTraceDataRef());
+		}
+		return null;
 	}
 
     @Override
@@ -199,11 +202,17 @@ public class InkTraceViewLeaf extends InkTraceView {
 
     @Override
     public Timespan getTimeSpan() {
-        return getTrace().getTimeSpan();
+    	if(!isEmpty()){
+    		return getTrace().getTimeSpan();
+    	}
+    	return null;
     }
     @Override
     public TraceBound getBounds() {
-        return getTrace().getBounds();
+    	if(!isEmpty()){
+    		return getTrace().getBounds();
+    	}
+    	return null;
     }
 
     /**
