@@ -72,6 +72,7 @@ public class FileUtil {
     
     
     public static FileInfo getInfo(File file){
+        assert file != null;
         return getInfo(file.getPath());
     }
     
@@ -99,9 +100,21 @@ public class FileUtil {
     }
     
     public static class FileInfo{
+        /**
+         * directory where the file is located (without trailing slash)
+         */
         public String dir;
+        /**
+         * Name of the file, without extension
+         */
         public String name;
+        /**
+         * Extension of the file (if not available its "")
+         */
         public String extension;
+        /**
+         * whole path of the file {dir}/{name}.{extension}
+         */
         public String path;
     }
 

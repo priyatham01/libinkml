@@ -66,7 +66,7 @@ public abstract class AbstractMain implements ConfigurableApplication{
             System.exit(1);
         }
         if(getConfig().getB("help")){
-            Messenger.error(getConfig().getHelpString());
+            System.out.println(getConfig().getHelpString());
             System.exit(0);
         }
     }

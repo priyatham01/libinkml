@@ -96,6 +96,6 @@ public class Segment extends Line2D.Double{
     
     @Override
     public int hashCode(){
-        return getP1().hashCode() ^ getP1().hashCode();
+        return getP1().hashCode() ^ (getP2().hashCode() * 29);
     }
 }

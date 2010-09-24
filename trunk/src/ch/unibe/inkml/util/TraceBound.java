@@ -47,7 +47,7 @@ public class TraceBound extends Rectangle2D.Double {
     	super();
     }
     
-	public int distanceToPoints(Point p) {
+	public int distanceToPoints(Point2D p) {
         int d = Integer.MAX_VALUE;
         for(Point2D angle : this.getPoints()) {
             int ld = (int) angle.distance(p);

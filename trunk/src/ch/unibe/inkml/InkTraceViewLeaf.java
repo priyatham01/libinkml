@@ -108,7 +108,7 @@ public class InkTraceViewLeaf extends InkTraceView {
         });
     }
     
-    String getTraceDataRef() {
+    public String getTraceDataRef() {
         return traceDataRef;
     }
     
