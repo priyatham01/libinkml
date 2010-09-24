@@ -1,6 +1,7 @@
 package ch.unibe.eindermu.utils;
 
 import java.util.ArrayList;
+import java.util.List;
 @SuppressWarnings("serial")
 abstract public class NumberList<T extends Number> extends ArrayList<T> {
 
@@ -41,6 +42,26 @@ abstract public class NumberList<T extends Number> extends ArrayList<T> {
         @Override
         protected  java.lang.Double cast(double d) {
             return d;
+        }
+        
+        public List<java.lang.Integer> getOrderedMaxima(){
+            Integer indexes = new NumberList.Integer();
+            Double values = new Double();
+            Integer maxs = getLocalMaxima();
+            for(int i = 0;i<maxs.size();i++){
+                int j = 0;
+                while(values.size()>j && values.get(j)>get(maxs.get(i))){
+                    j++;
+                }
+                if(values.size()<=j){
+                    values.add(get(maxs.get(i)));
+                    indexes.add(maxs.get(i));
+                }else{
+                    values.set(j, get(maxs.get(i)));
+                    indexes.set(j,maxs.get(i));
+                }
+            }
+            return indexes;
         }
 
     }

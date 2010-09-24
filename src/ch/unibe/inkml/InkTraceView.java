@@ -222,7 +222,7 @@ public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements
 	 * @param p Point
 	 * @return distance values
 	 */
-	public double distance(Point p) {
+	public double distance(Point2D p) {
         return InkTracePoint.distanceToPoint(this.getPoints(), p);
     }
 
@@ -421,6 +421,4 @@ public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements
 
     @Override
     public abstract void accept(TraceVisitor visitor);
-
-
 }
