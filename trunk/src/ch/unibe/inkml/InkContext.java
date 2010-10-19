@@ -65,27 +65,27 @@ public class InkContext extends InkUniqueElement{
 			}
 			String n = node.getNodeName();
 			if(n.equals(InkBrush.INKML_NAME)){
-				InkBrush brush = new InkBrush(this.getInk(),this.getInk().getDefinitions().uniqueId(InkBrush.ID_PREFIX));
+				InkBrush brush = new InkBrush(this.getInk(),this.getInk().getDefinitions().createUniqueId(InkBrush.ID_PREFIX));
 				brush.buildFromXMLNode((Element)node);
 				this.getInk().getDefinitions().enter(brush);
 				this.brushRef = brush.getId();
 			}else if(n.equals(InkCanvas.INKML_NAME)){
-				InkCanvas canvas = new InkCanvas(this.getInk(),this.getInk().getDefinitions().uniqueId(InkCanvas.ID_PREFIX));
+				InkCanvas canvas = new InkCanvas(this.getInk(),this.getInk().getDefinitions().createUniqueId(InkCanvas.ID_PREFIX));
 				canvas.buildFromXMLNode((Element)node);
 				this.getInk().getDefinitions().enter(canvas);
 				this.canvasRef = canvas.getId();
 			}else if(n.equals(InkCanvasTransform.INKML_NAME)){
-				InkCanvasTransform item = new InkCanvasTransform(this.getInk(),this.getInk().getDefinitions().uniqueId(InkCanvasTransform.ID_PREFIX));
+				InkCanvasTransform item = new InkCanvasTransform(this.getInk(),this.getInk().getDefinitions().createUniqueId(InkCanvasTransform.ID_PREFIX));
 				item.buildFromXMLNode((Element)node);
 				this.getInk().getDefinitions().enter(item);
 				this.canvasTransformRef = item.getId();
 			}else if(n.equals(InkTraceFormat.INKML_NAME)){
-				InkTraceFormat item = new InkTraceFormat(this.getInk(),this.getInk().getDefinitions().uniqueId(InkTraceFormat.ID_PREFIX));
+				InkTraceFormat item = new InkTraceFormat(this.getInk(),this.getInk().getDefinitions().createUniqueId(InkTraceFormat.ID_PREFIX));
 				item.buildFromXMLNode((Element)node);
 				this.getInk().getDefinitions().enter(item);
 				this.traceFormatRef = item.getId();
 			}else if(n.equals(InkInkSource.INKML_NAME)){
-				InkInkSource item = new InkInkSource(this.getInk(),this.getInk().getDefinitions().uniqueId(InkInkSource.ID_PREFIX));
+				InkInkSource item = new InkInkSource(this.getInk(),this.getInk().getDefinitions().createUniqueId(InkInkSource.ID_PREFIX));
 				item.buildFromXMLNode((Element)node);
 				this.getInk().getDefinitions().enter(item);
 				this.inkSourceRef = item.getId();

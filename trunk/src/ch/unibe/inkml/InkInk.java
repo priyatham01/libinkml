@@ -8,11 +8,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import ch.unibe.eindermu.utils.Aspect;
-import ch.unibe.eindermu.utils.NotImplementedException;
 import ch.unibe.eindermu.utils.Observer;
 import ch.unibe.inkml.util.Timespan;
 import ch.unibe.inkml.util.TraceBound;
-import ch.unibe.inkml.util.ViewTreeManipulationException;
+import ch.unibe.inkml.util.TraceViewTreeManipulationException;
 
 
 public class InkInk extends InkAnnotatedElement implements Observer {
@@ -22,12 +21,15 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 	/**
 	 * The definitions element, enables access to all elements with referenceIds 
 	 * not only those which are defined in definintions
+	 * @see InkDefinitions
 	 */
     private InkDefinitions definitions;	
 
     public static final Aspect ON_TRACE_REMOVED = new Aspect(){};
 
     public static final String INKML_NAME = "ink";
+
+    private static final String INKML_ATTR_DOCUMENT_ID = "documentID";
 
 
 	/**
@@ -46,8 +48,14 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 	 */
 	private InkContext currentContext;
 
-
-	private int traceNumber;
+	/**
+	 * A URI that uniquely identifies this document. No two documents 
+	 * with a distinct application intent may have the same documentID 
+	 * contents. The value of this property is an opaque URI whose 
+	 * interpretation is not defined in this specification.
+	 * See <a href="http://www.w3.org/TR/2010/WD-InkML-20100527/#inkElement">here</a>
+	 */
+	private String documentId;
 
 	
 	/**
@@ -102,11 +110,19 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 	}
 
 
+	/**
+	 * Returns the definitions object of this document. 
+	 * @see InkDefinitions
+	 * @return
+	 */
 	public InkDefinitions getDefinitions() {
 		return definitions;
 	}
 
-
+	/**
+	 * Adds a traceView element to this document (this will be one of the views returned by {@link #getViewRoots()}).
+	 * @param inkTraceView
+	 */
 	public void addView(InkTraceView inkTraceView) {
 		views.add(inkTraceView);
 		inkTraceView.registerFor(InkTraceView.ON_CHANGE, this);
@@ -125,10 +141,14 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 	@Override
 	public void buildFromXMLNode(Element node) throws InkMLComplianceException {
 		super.buildFromXMLNode(node);
+		if(node.hasAttribute(INKML_ATTR_DOCUMENT_ID)){
+		    documentId = node.getAttribute(INKML_ATTR_DOCUMENT_ID);
+		}
 		for(Node child = node.getFirstChild(); child != null; child = child.getNextSibling()){
 			if(child.getNodeType() == Node.ELEMENT_NODE){
 				stepNode((Element)child);
 			}
+			
 		}
 		
 	}
@@ -170,6 +190,10 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 		}
 	}
 
+	/**
+	 * Adds a new trace to this document.
+	 * @param inkTrace New trace to be added to this document
+	 */
 	public void addTrace(InkTrace inkTrace) {
 		if(!inkTrace.testFormat(inkTrace.getContext().getCanvasTraceFormat())){
 			System.err.println("trace is not well formated");
@@ -179,16 +203,13 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 	}
 
 
-	public int getTraceNumber() {
-		return traceNumber ++;
-	}
-
-
-
 
 	@Override
 	public void exportToInkML(Element node) throws InkMLComplianceException {
 		super.exportToInkML(node);
+		if(documentId != null && !documentId.isEmpty()){
+		    node.setAttribute(INKML_ATTR_DOCUMENT_ID, documentId);
+		}
 		this.getDefinitions().exportToInkML(node);
 		if(this.currentContext!= null){
 			this.currentContext.exportToInkML(node);
@@ -203,10 +224,18 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 
 
 
-
+	/**
+	 * Returns all traces which are direct children of this document.
+	 * @return
+	 */
 	public List<InkTrace> getTraces() {
 		return new ArrayList<InkTrace>(traces);
 	}
+	
+	/**
+	 * returns all traces of this document, ignoring the structuring by traceGroups.
+	 * @return
+	 */
 	public List<InkTrace> getFlatTraces(){
 	    ArrayList<InkTrace> leafs = new ArrayList<InkTrace>();
 	    for(InkTrace trace:traces){
@@ -219,6 +248,10 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 		return leafs;
 	}
 
+	/**
+	 * Returns the bounding box of the document taking every trace into account.
+	 * @return
+	 */
 	public TraceBound getBounds() {
 		TraceBound bound = new TraceBound();
 		for(InkTrace s : getTraces()){
@@ -227,15 +260,20 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 		return bound;
 	}
 
-	public void setTime(InkTrace stroke, Double time) {
-		throw new NotImplementedException();
-	}
-
+	
+	/**
+	 * Returns all traceViews of the {@link #getViewRoot()} which directly references to a trace. 
+	 * @return
+	 */
 	public List<InkTraceViewLeaf> getFlatTraceViewLeafs() {
 		return this.getViewRoot().getFlattenedTraceLeafs();
 	}
 
-
+	/**
+	 * Returns the first traceView element that is a direct child of the ink element.
+	 * It's assumed that the first traceView is the most important.
+	 * @return
+	 */
 	public InkTraceViewContainer getViewRoot() {
 		if(this.views.size() > 0){
 			return (InkTraceViewContainer) this.views.get(0);
@@ -246,25 +284,33 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 			return tv;
 		}
 	}
-
+	
+	/**
+	 * Returns all traceView elements that are direct children of {@link InkInk}.
+	 * These views often show different aspects of the document.
+	 * @return
+	 */
 	public List<InkTraceView> getViewRoots(){
 	    return views;
 	}
 
+	@Override
 	public InkInk getInk(){
 		return this;
 	}
 
-	public void exportToInkML(org.w3c.dom.Document document2) throws InkMLComplianceException {
-		Element ink = document2.createElement(INKML_NAME);
-		document2.appendChild(ink);
+	public void exportToInkML(org.w3c.dom.Document xmlDocument) throws InkMLComplianceException {
+		Element ink = xmlDocument.createElement(INKML_NAME);
+		xmlDocument.appendChild(ink);
 		this.exportToInkML(ink);
 	}
 
 
-
-
-
+	/**
+	 * Returns the Timspan this document is covering.
+	 * @return The timespan begining with point in time where the first trace has been written until
+	 * the point in time when the last trace has been finished.
+	 */
 	public Timespan getTimeSpan() {
 		Timespan ts = new Timespan();
 		for(InkTrace l : this.getTraces()){
@@ -306,7 +352,7 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 				if(!view.isRoot()){
 					try {
                         view.remove();
-                    } catch (ViewTreeManipulationException e) {
+                    } catch (TraceViewTreeManipulationException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
@@ -333,6 +379,33 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 		}
 	}
 
+    /**
+     * Sets the unique document id of this document.
+     * @see InkInk#documentId
+     * @param The new document id
+     */
+    public void setDocumentId(String docId) {
+        documentId = docId;
+        this.notifyObserver(ON_CHANGE, this);
+    }
+    
+    /**
+     * Returns the unique document id of this document.
+     * @see InkInk#documentId
+     * @return The unique document id.
+     */
+    public String getDocumentId(){
+        return documentId;
+    }
+
+    /**
+     * Returns the id generated from {@link #getDocumentId()} by stripping
+     * all but the last part of the URI. This is then unique within the current set of documents.
+     * @return The unique id of this document.
+     */
+    public String getId(){
+        return getDocumentId().substring(getDocumentId().lastIndexOf("/")+1);
+    }
 
 
 }

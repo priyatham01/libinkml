@@ -57,7 +57,7 @@ public abstract class InkUniqueElement extends InkElement {
 	 */
 	public String getIdNow(String prefix){
 		if(id == null){
-			this.id = this.getInk().getDefinitions().uniqueId(prefix);
+			this.id = this.getInk().getDefinitions().createUniqueId(prefix);
 			this.getInk().getDefinitions().put(this);
 		}
 		return this.id;

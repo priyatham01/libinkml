@@ -13,7 +13,7 @@ import ch.unibe.eindermu.utils.Observer;
 import ch.unibe.inkml.util.Timespan;
 import ch.unibe.inkml.util.TraceBound;
 import ch.unibe.inkml.util.TraceVisitor;
-import ch.unibe.inkml.util.ViewTreeManipulationException;
+import ch.unibe.inkml.util.TraceViewTreeManipulationException;
 
 public class InkTraceViewLeaf extends InkTraceView {
     
@@ -190,7 +190,7 @@ public class InkTraceViewLeaf extends InkTraceView {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void removeCompletely() throws ViewTreeManipulationException {
+    public void removeCompletely() throws TraceViewTreeManipulationException {
         //remove associated trace 
         InkTraceLike tl= getTrace();
         if(tl.isView()){
@@ -235,7 +235,7 @@ public class InkTraceViewLeaf extends InkTraceView {
     }
 
     @Override
-    public void remove() throws ViewTreeManipulationException {
+    public void remove() throws TraceViewTreeManipulationException {
         if(this == getRoot()){
             System.err.println("can not remove root view");
             return;

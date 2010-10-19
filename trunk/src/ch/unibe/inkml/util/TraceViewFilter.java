@@ -3,7 +3,9 @@ package ch.unibe.inkml.util;
 import java.util.Collection;
 import java.util.List;
 
+import ch.unibe.inkml.InkInk;
 import ch.unibe.inkml.InkTraceView;
+import ch.unibe.inkml.InkTraceViewLeaf;
 
 /**
  * A Trace filter filters some traces from a list. This is used to remove e.g. markings from the content,
@@ -27,4 +29,12 @@ public interface TraceViewFilter {
 	 * @return Filtered list of views 
 	 */
     public <L extends InkTraceView> List<L> filter(Collection<L> list);
+
+    /**
+     * Filters all views of this ink (this method may cache the filtering) 
+     * @param ink
+     * @return
+     */
+    public List<InkTraceView> filter(InkInk ink);
+    public List<InkTraceViewLeaf> filterLeaf(InkInk ink);
 }

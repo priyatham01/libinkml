@@ -1,3 +1,23 @@
+/*
+ *
+ * Copyright (C) 2007  Emanuel Indermühle <eindermu@iam.unibe.ch>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * @author emanuel
+ */
 package ch.unibe.inkml;
 
 import java.util.ArrayList;
@@ -7,42 +27,89 @@ import java.util.List;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+/**
+ * This class represents the definitions element within InkML documents. 
+ * See <a href="http://www.w3.org/TR/2010/WD-InkML-20100527/#definitions">here</a>.
+ * It contains definitions of different inkml elements which then can be referenced 
+ * within the document. Elements specified here have no effect until referenced. 
+ * 
+ * This class serves an other purpose. It is a <b>directory</b> to all elements which can be 
+ * identified by an id, see {@link InkUniqueElement}. These elements are not nessesairaly
+ * defined within the definitions element, but are managed by this class.
+ * 
+ * @author emanuel
+ *
+ */
 public class InkDefinitions extends HashMap<String,InkUniqueElement> implements InkElementInterface{
 	
 	private static final long serialVersionUID = -6448563169075416272L;
 
 	public static final String INKML_NAME = "definitions";
 	
+	/**
+	 * contains all elements that are contained by the the definitions element in the inkml tree.
+	 * The directory task which is provieded by this class is handled by the Hashmap this class is extending. 
+	 */
 	private List<InkElement> content = new ArrayList<InkElement>();
 	
+	/**
+	 * The {@link InkInk} this definition is defined in.
+	 */
 	private InkInk ink;
+	
 	
 	public InkDefinitions(InkInk ink) {
 		this.ink = ink;
 		ink.setDefinitions(this);
 	}
 	
+	/**
+	 * puts a document to the directory.
+	 * @param el
+	 */
 	public void put (InkUniqueElement el){
 		put(el.getId(),el);
 	}
 	
+	/**
+	 * removes a element from the definitions, and also from the directory. 
+	 * @param key
+	 */
 	public void remove(String key){
 	    this.content.remove(get(key));
 	    super.remove(key);
 	}
 	
+	
+	/**
+	 * Returns an element stored in the directory.
+	 * Thest befor if the element is availabel with {@link #containsKey(Object)}.
+	 * @param key Key referencing to the element in question.
+	 * @return the requested element if its avaliable, throws NullPointerExeption if the 
+	 * element is not availabel.
+	 */
 	public InkUniqueElement get(String key){
-		if(!this.containsKey(key)){
+		if(!containsKey(key)){
 			throw new NullPointerException("Element with key "+key+" is not yet defined in this document");
 		}
 		return super.get(key);
 	}
 	
+	/**
+	 * adds a element to the definitions. When exported to InkML this element will be written
+	 * within the definitions element. It resides here, and only here.
+	 * @param el
+	 */
 	public void enter(InkElement el){
 		this.content.add(el);
 	}
 	
-	public String uniqueId(String prefix) {
+	/**
+	 * Create a unique Id (unique for this document) with the specified prefix.
+	 * @param prefix
+	 * @return
+	 */
+	public String createUniqueId(String prefix) {
 		int count = 0;
 		while(containsKey(prefix+count)){
 			count ++;
@@ -50,6 +117,11 @@ public class InkDefinitions extends HashMap<String,InkUniqueElement> implements 
 		return prefix+count;
 	}
 
+	/**
+	 * @see InkElement#buildFromXMLNode(Element)
+	 * @param node
+	 * @throws InkMLComplianceException
+	 */
 	public void buildFromXMLNode(Element node) throws InkMLComplianceException {
 		for(Node child = node.getFirstChild(); child!= null; child = child.getNextSibling()){
 			if(child.getNodeType() != Node.ELEMENT_NODE){
@@ -88,6 +160,11 @@ public class InkDefinitions extends HashMap<String,InkUniqueElement> implements 
 	}
 
 
+	/**
+	 * @see InkElement#exportToInkML(Element)
+	 * @param parent
+	 * @throws InkMLComplianceException
+	 */
 	public void exportToInkML(Element parent) throws InkMLComplianceException {
 		Element definitionNode = parent.getOwnerDocument().createElement(INKML_NAME);
 		parent.appendChild(definitionNode);
@@ -96,7 +173,7 @@ public class InkDefinitions extends HashMap<String,InkUniqueElement> implements 
 		}
 	}
 
-
+	@Override
 	public InkInk getInk() {
 		return ink;
 	}
