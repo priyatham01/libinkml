@@ -18,7 +18,7 @@ import ch.unibe.eindermu.utils.Observer;
 import ch.unibe.inkml.util.Timespan;
 import ch.unibe.inkml.util.TraceBound;
 import ch.unibe.inkml.util.TraceVisitor;
-import ch.unibe.inkml.util.ViewTreeManipulationException;
+import ch.unibe.inkml.util.TraceViewTreeManipulationException;
 
 
 public class InkTraceViewContainer extends InkTraceView implements Observer {
@@ -78,7 +78,7 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
 			InkTraceView v = InkTraceView.createTraceView(getInk(), this, child);
 			try {
                 addTrace(v);
-            } catch (ViewTreeManipulationException e) {
+            } catch (TraceViewTreeManipulationException e) {
                 e.printStackTrace();
                 throw new InkMLComplianceException("There has been a ViewTreeManipulation exception, this should not happen.");
             }
@@ -105,7 +105,7 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
 	 * Adds each InkTraceView of the list to this container 
 	 * @param viewList list of InkTraceView
 
-	 * @throws ViewTreeManipulationException 
+	 * @throws TraceViewTreeManipulationException 
 	 */
 	public void addTraces(Collection<InkTraceView> viewList){
 		if(this.content == null){
@@ -155,16 +155,16 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
 	 * If the new trace view is empty (no content, and not refering to trace) it will be droped.
 	 * If the new trace view has allready a parent, it is removed from this parent.
 	 * @param tv new trace view added to this container.
-	 * @throws ViewTreeManipulationException 
+	 * @throws TraceViewTreeManipulationException 
 	 */
-	public void addTrace(InkTraceView tv) throws ViewTreeManipulationException {
+	public void addTrace(InkTraceView tv) throws TraceViewTreeManipulationException {
 	    List<InkTraceView> l = new ArrayList<InkTraceView>();
 	    l.add(tv);
 	    addTraces(l);
 	} 
 	
 
-	private void acctuallyAdd(InkTraceView tv) throws ViewTreeManipulationException{
+	private void acctuallyAdd(InkTraceView tv) throws TraceViewTreeManipulationException{
         if(tv == null){
             return;
         }
@@ -185,9 +185,9 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
      * specified by the parameter
      * @param viewList list of views which will be children of the container returned
      * @return new container which is child of this object and parent of the views in the list
-     * @throws ViewTreeManipulationException 
+     * @throws TraceViewTreeManipulationException 
      */
-    public InkTraceView createChildContainer(Collection<InkTraceView> viewList) throws ViewTreeManipulationException {
+    public InkTraceView createChildContainer(Collection<InkTraceView> viewList) throws TraceViewTreeManipulationException {
     	InkTraceViewContainer tv = new InkTraceViewContainer(this.getInk());
     	tv.addTraces(viewList);
     	acctuallyAdd(tv);
@@ -203,9 +203,9 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
 
     /**
      * removes this view and all its children from the view tree.
-     * @throws ViewTreeManipulationException 
+     * @throws TraceViewTreeManipulationException 
      */
-    public void remove() throws ViewTreeManipulationException {
+    public void remove() throws TraceViewTreeManipulationException {
         if(this == getRoot()){
             System.err.println("can not remove root view");
             return;
@@ -253,9 +253,9 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
     /**
      * removes this view from the view tree. Its children are transfered
      * to the parent.
-     * @throws ViewTreeManipulationException 
+     * @throws TraceViewTreeManipulationException 
      */
-    public void resect() throws ViewTreeManipulationException {
+    public void resect() throws TraceViewTreeManipulationException {
     	if(this.isRoot()){
               System.err.println("can not resect root view");
               return;
@@ -268,9 +268,9 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
      * completely removes this view and all its children from the view tree.
      * It also removes all traces, that are reffered by these views. 
      * It is actually used to remove traces. 
-     * @throws ViewTreeManipulationException 
+     * @throws TraceViewTreeManipulationException 
      */
-    public void removeCompletely() throws ViewTreeManipulationException {
+    public void removeCompletely() throws TraceViewTreeManipulationException {
     	if(isRoot()){         
     	    System.err.println("can not completely remove the root view");
     		return;

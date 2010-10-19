@@ -30,7 +30,7 @@ import org.xml.sax.SAXException;
  */
 public class XmlHandler{
     
-    private Document document = null;
+    private Document xmlDocument = null;
     
     private File schema = null;
      
@@ -54,7 +54,7 @@ public class XmlHandler{
             
             // Read the document
             
-            document = parser.parse(file);
+            xmlDocument = parser.parse(file);
             
             if(schema != null){
                 SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
@@ -62,11 +62,11 @@ public class XmlHandler{
                 System.err.println(getClass().toString());
                 Schema schemaObject = schemaFactory.newSchema(schema);
                 Validator validator = schemaObject.newValidator(); 
-                DOMSource source = new DOMSource(document);
+                DOMSource source = new DOMSource(xmlDocument);
                 DOMResult result = new DOMResult();
                 try{
                     validator.validate(source,result);
-                    document = (Document) result.getNode();
+                    xmlDocument = (Document) result.getNode();
                 } catch(SAXException e){
                     throw new IOException(e.getMessage());
                 }
@@ -80,13 +80,13 @@ public class XmlHandler{
         }
     }
     
-    public void createNewDocument() throws ParserConfigurationException {
+    public void createNewXMLDocument() throws ParserConfigurationException {
         // Find a parser
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         DocumentBuilder parser = factory.newDocumentBuilder();
         // Read the document
-        this.document = parser.newDocument();
+        this.xmlDocument = parser.newDocument();
         
     }
     
@@ -94,7 +94,7 @@ public class XmlHandler{
         // Write it out again
         TransformerFactory xformFactory = TransformerFactory.newInstance();
         Transformer idTransform = xformFactory.newTransformer();
-        Source input = new DOMSource(document);
+        Source input = new DOMSource(xmlDocument);
         Result output = new StreamResult(file);
         idTransform.transform(input, output);
     }
@@ -102,12 +102,12 @@ public class XmlHandler{
     public void saveToStream(OutputStream stream) throws TransformerException{
         TransformerFactory xformFactory = TransformerFactory.newInstance();
         Transformer idTransform = xformFactory.newTransformer();
-        Source input = new DOMSource(document);
+        Source input = new DOMSource(xmlDocument);
         Result output = new StreamResult(stream);
         idTransform.transform(input, output);
     }
     
 	public Document getDocument() {
-		return this.document;
+		return this.xmlDocument;
 	}    
 }

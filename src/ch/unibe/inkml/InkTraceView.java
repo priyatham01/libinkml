@@ -14,7 +14,7 @@ import ch.unibe.eindermu.utils.Observable;
 import ch.unibe.inkml.util.Timespan;
 import ch.unibe.inkml.util.TraceBound;
 import ch.unibe.inkml.util.TraceVisitor;
-import ch.unibe.inkml.util.ViewTreeManipulationException;
+import ch.unibe.inkml.util.TraceViewTreeManipulationException;
 
 
 public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements Observable, Comparable<InkTraceView> {
@@ -402,16 +402,16 @@ public abstract class InkTraceView extends InkTraceLike<InkTraceView> implements
 	/**
 	 * Removes this TraceView and all its children from the traceView tree.
 	 * If <code>this</code> is the root, nothing happens
-	 * @throws ViewTreeManipulationException 
+	 * @throws TraceViewTreeManipulationException 
 	 */
-	public abstract void remove() throws ViewTreeManipulationException;
+	public abstract void remove() throws TraceViewTreeManipulationException;
 
 	/**
 	 * Removes this TraceView, all its children, and all their referenced traces from the document.
      * If <code>this</code> is the root, nothing happens
-	 * @throws ViewTreeManipulationException
+	 * @throws TraceViewTreeManipulationException
 	 */
-    public abstract void removeCompletely() throws ViewTreeManipulationException;
+    public abstract void removeCompletely() throws TraceViewTreeManipulationException;
 
     @Override
     public abstract InkTracePoint getPoint(int i);
