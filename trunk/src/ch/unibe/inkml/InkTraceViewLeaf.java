@@ -106,6 +106,7 @@ public class InkTraceViewLeaf extends InkTraceView {
                 notifyObserver(ON_DATA_CHANGE,subject);
             }
         });
+        notifyObserver(ON_DATA_CHANGE);
     }
     
     public String getTraceDataRef() {
