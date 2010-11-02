@@ -111,6 +111,7 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
 		if(this.content == null){
 			this.content = new ArrayList<InkTraceView>();
 		}
+		//collect existing parents
 		HashMap<InkTraceViewContainer,Set<InkTraceView>> map = new HashMap<InkTraceViewContainer, Set<InkTraceView>>();
         for(InkTraceView v : viewList){
             if(v.getParent() != null && v.getParent() != this){
@@ -498,7 +499,8 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
                 bounds = null;
                 timespan = null;
             }
-            if(subject instanceof TreeEvent && ((TreeEvent)subject).aspect != ON_NODE_CHANGE && ((TreeEvent)subject).aspect != ON_CHILD_PRE_REMOVE){
+            if( (subject instanceof TreeEvent && ((TreeEvent)subject).aspect != ON_NODE_CHANGE && ((TreeEvent)subject).aspect != ON_CHILD_PRE_REMOVE)
+                 || event ==  ON_DATA_CHANGE){
                 Collections.sort(content);
             }
             notifyObserver(event, subject);
