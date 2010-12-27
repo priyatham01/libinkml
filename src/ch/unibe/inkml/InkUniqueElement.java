@@ -48,6 +48,14 @@ public abstract class InkUniqueElement extends InkElement {
 	}
 	
 	/**
+	 * Returns true if this object has an id assigned
+	 * @return
+	 */
+	public boolean hasId() {
+		return getId() != null;
+	}
+	
+	/**
 	 * Returns the key of this element. If there is no key
 	 * a new key is assigned to this element, and it is registered
 	 * in the definition element.
@@ -83,7 +91,7 @@ public abstract class InkUniqueElement extends InkElement {
 	
 	public String getLabel() {
 		String result =  super.getLabel();
-		if(this.getId() != null){
+		if(this.hasId()){
 			result = result+"("+this.getId()+")";
 		}
 		return result;

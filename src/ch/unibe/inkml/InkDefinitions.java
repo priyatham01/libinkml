@@ -27,6 +27,10 @@ import java.util.List;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import sun.security.action.GetLongAction;
+
+import ch.unibe.eindermu.Messenger;
+
 /**
  * This class represents the definitions element within InkML documents. 
  * See <a href="http://www.w3.org/TR/2010/WD-InkML-20100527/#definitions">here</a>.
@@ -49,8 +53,10 @@ public class InkDefinitions extends HashMap<String,InkUniqueElement> implements 
 	/**
 	 * contains all elements that are contained by the the definitions element in the inkml tree.
 	 * The directory task which is provieded by this class is handled by the Hashmap this class is extending. 
+	 * To access the element contained by the definitions element
+	 * use the methods enterElement, containsElement and getElement
 	 */
-	private List<InkElement> content = new ArrayList<InkElement>();
+	private List<InkUniqueElement> content = new ArrayList<InkUniqueElement>();
 	
 	/**
 	 * The {@link InkInk} this definition is defined in.
@@ -100,8 +106,29 @@ public class InkDefinitions extends HashMap<String,InkUniqueElement> implements 
 	 * within the definitions element. It resides here, and only here.
 	 * @param el
 	 */
-	public void enter(InkElement el){
+	public void enterElement(InkUniqueElement el){
+		if(!el.hasId()){
+			Messenger.warn(String.format("Element '%s' is defined content of element '%s' but has no xml:id attribute. This make no sense.", el.getLabel(),INKML_NAME));
+		}
 		this.content.add(el);
+	}
+	
+	public boolean containsElement(String id){
+		for(InkUniqueElement c : content){
+			if(c.hasId() && c.getId().equals(id)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public InkUniqueElement getElement(String id){
+		for(InkUniqueElement c : content){
+			if(c.hasId() && c.getId().equals(id)){
+				return c;
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -131,30 +158,35 @@ public class InkDefinitions extends HashMap<String,InkUniqueElement> implements 
 			if(n.equals(InkInkSource.INKML_NAME)){
 				InkInkSource b = new InkInkSource(this.getInk());
 				b.buildFromXMLNode((Element)child);
-				this.enter(b);
+				this.enterElement(b);
 			}
-			if(n.equals(InkBrush.INKML_NAME)){
+			else if(n.equals(InkBrush.INKML_NAME)){
 				InkBrush b = new InkBrush(this.getInk());
 				b.buildFromXMLNode((Element)child);
-				this.enter(b);
+				this.enterElement(b);
 			}
-			if(n.equals(InkCanvas.INKML_NAME)){
+			else if(n.equals(InkCanvas.INKML_NAME)){
 				InkCanvas c = new InkCanvas(this.getInk());
 				c.buildFromXMLNode((Element)child);
-				this.enter(c);
+				this.enterElement(c);
 			}
-			if(n.equals(InkCanvasTransform.INKML_NAME)){
+			else if(n.equals(InkCanvasTransform.INKML_NAME)){
 				InkCanvasTransform f = new InkCanvasTransform(this.getInk());
 				f.buildFromXMLNode((Element)child);
-				this.enter(f);
+				this.enterElement(f);
 			}
-			if(n.equals(InkTraceFormat.INKML_NAME)){
+			else if(n.equals(InkTraceFormat.INKML_NAME)){
 				InkTraceFormat f = new InkTraceFormat(this.getInk());
 				f.buildFromXMLNode((Element)child);
-				this.enter(f);
+				this.enterElement(f);
 			}
-			if(n.equals(InkMapping.INKML_NAME)){
-				this.enter(InkMapping.mappingFactory(this.getInk(),(Element)child));
+			else if(n.equals(InkMapping.INKML_NAME)){
+				this.enterElement(InkMapping.mappingFactory(this.getInk(),(Element)child));
+			}
+			else if(n.equals(InkContext.INKML_NAME)){
+				InkContext context =new InkContext(getInk());
+				context.buildFromXMLNode((Element)child);
+				this.enterElement(context);
 			}
 		}
 	}

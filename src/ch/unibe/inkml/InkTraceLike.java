@@ -154,16 +154,12 @@ public abstract class InkTraceLike<C extends InkTraceLike<C>> extends InkAnnotat
 	 */
 	public abstract C getRoot();
 	
-	/**
-	 * {@inheritDoc}
-	 */
+
     public void exportToInkML(Element node) throws InkMLComplianceException {
     	super.exportToInkML(node);
     	writeAttribute(node, "contextRef", this.contextRef, null);
     }
-    /**
-     * {@inheritDoc}
-     */
+
     public void buildFromXMLNode(Element node) throws InkMLComplianceException {
     	super.buildFromXMLNode(node);
     	this.setCurrentContext(this.getInk().getCurrentContext());
