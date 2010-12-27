@@ -29,7 +29,11 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 
     public static final String INKML_NAME = "ink";
 
-    private static final String INKML_ATTR_DOCUMENT_ID = "documentID";
+    public static final String INKML_ATTR_DOCUMENT_ID = "documentID";
+
+	public static final String INKML_NAMESPACE = "http://www.w3.org/2003/InkML";
+
+	public static final String XML_ATTR_NAMESPACE = "xmlns";
 
 
 	/**
@@ -164,7 +168,9 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 		}else if(n.equals(InkContext.INKML_NAME)){
 			InkContext context = new InkContext(this);
 			context.buildFromXMLNode((Element)node);
-			this.getInk().getDefinitions().enter(context);
+			if(!context.hasId()){
+				this.getInk().getDefinitions().put(context);
+			}
 			this.getInk().setCurrentContext(context);
 		}else if(n.equals(InkTraceViewLeaf.INKML_NAME)){
 		    addView(InkTraceView.createTraceView(getInk(),null,node));
@@ -209,6 +215,7 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 		super.exportToInkML(node);
 		if(documentId != null && !documentId.isEmpty()){
 		    node.setAttribute(INKML_ATTR_DOCUMENT_ID, documentId);
+		    node.setAttribute(XML_ATTR_NAMESPACE, INKML_NAMESPACE);
 		}
 		this.getDefinitions().exportToInkML(node);
 		if(this.currentContext!= null){

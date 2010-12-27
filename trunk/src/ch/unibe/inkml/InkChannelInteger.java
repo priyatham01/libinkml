@@ -42,7 +42,7 @@ public class InkChannelInteger extends InkChannel {
 	@Override
 	public void setDefaultValue(String defaultValue) {
 		if(!defaultValue.isEmpty()){
-			this.defaultValue = Integer.parseInt(defaultValue);
+			this.defaultValue = (int) Math.floor(Double.parseDouble(defaultValue));
 		}else{
 			this.defaultValue = 0;
 		}

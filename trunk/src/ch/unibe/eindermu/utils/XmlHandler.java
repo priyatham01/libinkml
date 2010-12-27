@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -18,12 +19,16 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.w3c.dom.Document;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 /**
  * @author Marcus Liwicki
@@ -32,10 +37,12 @@ public class XmlHandler{
     
     private Document xmlDocument = null;
     
-    private File schema = null;
+    private ArrayList<InputStream> schemata = new ArrayList<InputStream>();
+    
+    private DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
      
-    public void setSchema(File file) {
-        schema = file;
+    public void addSchema(InputStream schema) {
+        this.schemata.add(schema);
     }
     
     public void loadFromFile(File file) throws IOException {
@@ -43,25 +50,53 @@ public class XmlHandler{
     }
     
     public void loadFromStream(InputStream file) throws IOException {
-
         try {
-            // Find a parser
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            // factory.setValidating(true);
+            // apply schema for validation
+        	if(!schemata.isEmpty()){
+        		factory.setNamespaceAware(true);
+    			factory.setValidating(true);
+            	
+        		try{
+        			factory.setAttribute("http://java.sun.com/xml/jaxp/properties/schemaLanguage","http://www.w3.org/2001/XMLSchema");
+	            	factory.setAttribute("http://java.sun.com/xml/jaxp/properties/schemaSource", schemata.toArray());
+	            }catch(IllegalArgumentException x){
+	            	System.err.println("The XML parser implementation of this java vm does not support XML schema validation. The reason is: " + x.getMessage() +
+	            			"\nXML will be parsed without validation");
+	            	factory.setValidating(false);
+	            	factory.setNamespaceAware(false);
+	            }
+        	}
             
+        	final StringList errors = new StringList();
             DocumentBuilder parser = factory.newDocumentBuilder();
-            
-            // Read the document
-            
+            parser.setErrorHandler(new ErrorHandler() {
+				@Override
+				public void warning(SAXParseException exception) throws SAXException {
+					
+				}
+				
+				@Override
+				public void fatalError(SAXParseException exception) throws SAXException {
+					errors.add(exception.getMessage());
+				}
+				
+				@Override
+				public void error(SAXParseException exception) throws SAXException {
+					errors.add(exception.getMessage());
+					
+				}
+			});
             xmlDocument = parser.parse(file);
             
-            if(schema != null){
+            
+            if(!schemata.isEmpty() && false){
                 SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-                System.err.println(schema.getPath());
-                System.err.println(getClass().toString());
-                Schema schemaObject = schemaFactory.newSchema(schema);
-                Validator validator = schemaObject.newValidator(); 
+                Source[] schemaSources = new Source[schemata.size()];
+                for(int i = 0;i<schemata.size();i++){
+                	
+                	schemaSources[i] = new StreamSource(schemata.get(i));
+                }
+                Validator validator = schemaFactory.newSchema(schemaSources).newValidator(); 
                 DOMSource source = new DOMSource(xmlDocument);
                 DOMResult result = new DOMResult();
                 try{
@@ -70,6 +105,10 @@ public class XmlHandler{
                 } catch(SAXException e){
                     throw new IOException(e.getMessage());
                 }
+            }
+            
+            if(!errors.isEmpty()){
+            	throw new IOException(errors.join("\n"));
             }
             
         } catch(SAXException e) {

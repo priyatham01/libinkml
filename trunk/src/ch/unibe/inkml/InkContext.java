@@ -67,27 +67,27 @@ public class InkContext extends InkUniqueElement{
 			if(n.equals(InkBrush.INKML_NAME)){
 				InkBrush brush = new InkBrush(this.getInk(),this.getInk().getDefinitions().createUniqueId(InkBrush.ID_PREFIX));
 				brush.buildFromXMLNode((Element)node);
-				this.getInk().getDefinitions().enter(brush);
+				this.getInk().getDefinitions().enterElement(brush);
 				this.brushRef = brush.getId();
 			}else if(n.equals(InkCanvas.INKML_NAME)){
 				InkCanvas canvas = new InkCanvas(this.getInk(),this.getInk().getDefinitions().createUniqueId(InkCanvas.ID_PREFIX));
 				canvas.buildFromXMLNode((Element)node);
-				this.getInk().getDefinitions().enter(canvas);
+				this.getInk().getDefinitions().enterElement(canvas);
 				this.canvasRef = canvas.getId();
 			}else if(n.equals(InkCanvasTransform.INKML_NAME)){
 				InkCanvasTransform item = new InkCanvasTransform(this.getInk(),this.getInk().getDefinitions().createUniqueId(InkCanvasTransform.ID_PREFIX));
 				item.buildFromXMLNode((Element)node);
-				this.getInk().getDefinitions().enter(item);
+				this.getInk().getDefinitions().enterElement(item);
 				this.canvasTransformRef = item.getId();
 			}else if(n.equals(InkTraceFormat.INKML_NAME)){
 				InkTraceFormat item = new InkTraceFormat(this.getInk(),this.getInk().getDefinitions().createUniqueId(InkTraceFormat.ID_PREFIX));
 				item.buildFromXMLNode((Element)node);
-				this.getInk().getDefinitions().enter(item);
+				this.getInk().getDefinitions().enterElement(item);
 				this.traceFormatRef = item.getId();
 			}else if(n.equals(InkInkSource.INKML_NAME)){
 				InkInkSource item = new InkInkSource(this.getInk(),this.getInk().getDefinitions().createUniqueId(InkInkSource.ID_PREFIX));
 				item.buildFromXMLNode((Element)node);
-				this.getInk().getDefinitions().enter(item);
+				this.getInk().getDefinitions().enterElement(item);
 				this.inkSourceRef = item.getId();
 			}
 		}
@@ -100,13 +100,17 @@ public class InkContext extends InkUniqueElement{
 		}
 		Element contextNode = parent.getOwnerDocument().createElement(INKML_NAME);
 		parent.appendChild(contextNode);
-		writeAttribute(contextNode, INKML_ATTR_ID, this.getId(), "");
-		writeAttribute(contextNode, INKML_ATTR_CONTEXTREF, contextRef, "");
-		writeAttribute(contextNode, INKML_ATTR_CANVASREF, canvasRef, "");
-		writeAttribute(contextNode, INKML_ATTR_CANVASTRANSFORMREF, canvasTransformRef, "");
-		writeAttribute(contextNode, INKML_ATTR_TRACEFORMATREF, traceFormatRef, "");
-		writeAttribute(contextNode, INKML_ATTR_INKSOURCEREF, inkSourceRef, "");
-		writeAttribute(contextNode, INKML_ATTR_BRUSHREF, brushRef, "");
+		if(!isReferenceOnly() &&  getInk().getDefinitions().containsElement(getId()) && !parent.getNodeName().equals(InkDefinitions.INKML_NAME)){
+			writeAttribute(contextNode, INKML_ATTR_CONTEXTREF, "#"+getId(),"");
+		}else{
+			writeAttribute(contextNode, INKML_ATTR_ID, this.getId(), "");
+			writeAttribute(contextNode, INKML_ATTR_CONTEXTREF, contextRef, "");
+			writeAttribute(contextNode, INKML_ATTR_CANVASREF, canvasRef, "");
+			writeAttribute(contextNode, INKML_ATTR_CANVASTRANSFORMREF, canvasTransformRef, "");
+			writeAttribute(contextNode, INKML_ATTR_TRACEFORMATREF, traceFormatRef, "");
+			writeAttribute(contextNode, INKML_ATTR_INKSOURCEREF, inkSourceRef, "");
+			writeAttribute(contextNode, INKML_ATTR_BRUSHREF, brushRef, "");
+		}
 	}
 	
 	
@@ -223,6 +227,16 @@ public class InkContext extends InkUniqueElement{
 
 	public boolean hasBrush() {
 		return this.getBrush()!=null;
+	}
+
+	public boolean isReferenceOnly() {
+		return (contextRef != null
+				&& canvasRef == null
+				&& canvasTransformRef == null
+				&& traceFormatRef == null
+				&& inkSourceRef == null
+				&& brushRef == null
+				);
 	}
 
 

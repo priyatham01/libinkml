@@ -8,8 +8,8 @@ import ch.unibe.inkml.util.MatrixCalculator;
 
 public class InkMatrix extends InkUniqueElement {
 
-    public static final String ID_PREFIX = "matrix";
-    public static final String INKML_NAME = "matrix";
+    public static final String ID_PREFIX = "affine";
+    public static final String INKML_NAME = "affine";
     
     
 	private double[][] matrix;

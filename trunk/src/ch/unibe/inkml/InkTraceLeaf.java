@@ -128,8 +128,8 @@ public class InkTraceLeaf extends InkTrace {
             return null;
         }
 
-        public static Type getValue(String name) {
-            for (Type t : Type.values()) {
+        public static Continuation getValue(String name) {
+            for (Continuation t : Continuation.values()) {
                 if (t.toString().equalsIgnoreCase(name)) {
                     return t;
                 }
@@ -451,10 +451,10 @@ public class InkTraceLeaf extends InkTrace {
     public void buildFromXMLNode(Element node) throws InkMLComplianceException {
         super.buildFromXMLNode(node);
         if (node.hasAttribute(INKML_ATTR_TYPE)) {
-            this.type = Type.valueOf(loadAttribute(node, INKML_ATTR_TYPE, null));
+            this.type = Type.getValue(loadAttribute(node, INKML_ATTR_TYPE, null));
         }
         if (node.hasAttribute(INKML_ATTR_CONTINUATION)) {
-            this.continuation = Continuation.valueOf(node
+            this.continuation = Continuation.getValue(node
                     .getAttribute(INKML_ATTR_CONTINUATION));
         }
         if (this.continuation == Continuation.END
@@ -517,9 +517,8 @@ public class InkTraceLeaf extends InkTrace {
     public void exportToInkML(Element parent) throws InkMLComplianceException {
         if (this.isRoot()
                 && parent.getNodeName().equals(InkInk.INKML_NAME)
-                && this.getCurrentContext() != this.getInk()
-                        .getCurrentContext()) {
-            this.getCurrentContext().exportToInkML(parent);
+                && this.getCurrentContext() != this.getInk().getCurrentContext()) {
+        	this.getCurrentContext().exportToInkML(parent);
         }
         if(tainted){
             backTransformPoints();

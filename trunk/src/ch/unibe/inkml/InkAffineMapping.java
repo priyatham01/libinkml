@@ -57,9 +57,12 @@ public class InkAffineMapping extends InkMapping {
 	
 	public void buildFromXMLNode(Element node)throws InkMLComplianceException {
 		super.buildFromXMLNode(node);
-		Element matrixNode = (Element) node.getElementsByTagName("matrix").item(0);
+		Element matrixNode = (Element) node.getElementsByTagName(InkMatrix.INKML_NAME).item(0);
+		if(matrixNode == null){//depricated: old files used to name the affine element "matrix"
+			matrixNode = (Element) node.getElementsByTagName("matrix").item(0);	
+		}
 		if(matrixNode == null){
-			throw new InkMLComplianceException("A mapping with @type=\"matrix\" must contain a matrix element");
+			throw new InkMLComplianceException("A mapping with @type=\"affine\" must contain an element with name \"affine\"");
 		}
 		matrix = new InkMatrix(this.getInk());
 		matrix.buildFromXMLNode(matrixNode);
