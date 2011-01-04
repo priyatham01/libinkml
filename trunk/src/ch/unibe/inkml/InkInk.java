@@ -159,12 +159,9 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 
 	private void stepNode(Element node) throws InkMLComplianceException{
 	    String n = node.getNodeName();
-		if(n.equals(InkDefinitions.INKML_NAME)){
+		if(n.equals(InkDefinitions.INKML_NAME) || n.equals("definition") /*backwards compatibility for definition-instead-of-definitions bug*/){ 
 			definitions = new InkDefinitions(this.getInk());
 			definitions.buildFromXMLNode(node);
-		}else if(n.equals("definition")){ // backwards compatibility for definition-instead-of-definitions bug
-		    definitions = new InkDefinitions(this.getInk());
-            definitions.buildFromXMLNode(node);
 		}else if(n.equals(InkContext.INKML_NAME)){
 			InkContext context = new InkContext(this);
 			context.buildFromXMLNode((Element)node);
@@ -174,12 +171,12 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 			this.getInk().setCurrentContext(context);
 		}else if(n.equals(InkTraceViewLeaf.INKML_NAME)){
 		    addView(InkTraceView.createTraceView(getInk(),null,node));
-		}else if(n.equals("trace")){
+		}else if(n.equals(InkTraceLeaf.INKML_NAME)){
 			InkTraceLeaf t = new InkTraceLeaf(this.getInk(),null);
 			t.buildFromXMLNode(node);
 			this.addTrace(t);
-		}else if(n.equals("traceGroup")){
-		    int traceCount = node.getElementsByTagName("trace").getLength();
+		}else if(n.equals(InkTraceViewContainer.INKML_NAME)){
+		    int traceCount = node.getElementsByTagName(InkTraceLeaf.INKML_NAME).getLength();
 		    int viewCount = node.getElementsByTagName(InkTraceViewLeaf.INKML_NAME).getLength();
 		    if(traceCount > 0 && viewCount > 0){
 		        throw new InkMLComplianceException("libinkml does not support traces and traceViews been mixed within a traceGroup");

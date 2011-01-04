@@ -101,7 +101,7 @@ public class InkContext extends InkUniqueElement{
 		Element contextNode = parent.getOwnerDocument().createElement(INKML_NAME);
 		parent.appendChild(contextNode);
 		if(!isReferenceOnly() &&  getInk().getDefinitions().containsElement(getId()) && !parent.getNodeName().equals(InkDefinitions.INKML_NAME)){
-			writeAttribute(contextNode, INKML_ATTR_CONTEXTREF, "#"+getId(),"");
+			writeAttribute(contextNode, INKML_ATTR_CONTEXTREF, getId(),"");
 		}else{
 			writeAttribute(contextNode, INKML_ATTR_ID, this.getId(), "");
 			writeAttribute(contextNode, INKML_ATTR_CONTEXTREF, contextRef, "");
