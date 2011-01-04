@@ -2,6 +2,7 @@ package ch.unibe.inkml;
 
 import org.w3c.dom.Element;
 
+import ch.unibe.eindermu.Messenger;
 import ch.unibe.eindermu.utils.NotImplementedException;
 
 
@@ -24,7 +25,7 @@ public abstract class InkUniqueElement extends InkElement {
 	}
 
 	public void setId(String id) throws InkMLComplianceException{
-	    if(!id.equals(this.id) && getInk().getDefinitions().containsKey(this.id)){
+	    if(!id.equals(this.id) && getInk().getDefinitions().containsKey(id)){
             throw new InkMLComplianceException("The id '"+id+"' is already in use, you can not use it.");
         }
 		if(this.id == null){

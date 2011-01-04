@@ -126,7 +126,7 @@ public class XmlHandler{
         DocumentBuilder parser = factory.newDocumentBuilder();
         // Read the document
         this.xmlDocument = parser.newDocument();
-        
+        this.xmlDocument.setXmlStandalone(true);
     }
     
     public void saveToFile(File file) throws TransformerException {
