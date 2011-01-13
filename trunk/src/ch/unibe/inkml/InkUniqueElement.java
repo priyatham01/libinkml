@@ -2,9 +2,6 @@ package ch.unibe.inkml;
 
 import org.w3c.dom.Element;
 
-import ch.unibe.eindermu.Messenger;
-import ch.unibe.eindermu.utils.NotImplementedException;
-
 
 
 
