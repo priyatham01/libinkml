@@ -180,7 +180,7 @@ public abstract class InkTraceLike<C extends InkTraceLike<C>> extends InkAnnotat
      * @param name
      * @param value
      */
-    public boolean testAnnotationTree(String name, String value) {
+    public boolean testAnnotationTree(String name, String... value) {
         return testAnnotation(name , value) || (!this.isRoot() && this.getParent().testAnnotationTree(name, value));
     }
     

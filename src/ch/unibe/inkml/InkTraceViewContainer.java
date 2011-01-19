@@ -15,8 +15,10 @@ import org.w3c.dom.Node;
 import ch.unibe.eindermu.utils.Aspect;
 import ch.unibe.eindermu.utils.Observable;
 import ch.unibe.eindermu.utils.Observer;
+import ch.unibe.inkml.util.AbstractTraceFilter;
 import ch.unibe.inkml.util.Timespan;
 import ch.unibe.inkml.util.TraceBound;
+import ch.unibe.inkml.util.TraceViewFilter;
 import ch.unibe.inkml.util.TraceVisitor;
 import ch.unibe.inkml.util.TraceViewTreeManipulationException;
 
@@ -276,7 +278,7 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
     	    System.err.println("can not completely remove the root view");
     		return;
     	}
-    	for(InkTraceViewLeaf leaf : getFlattenedTraceLeafs()){
+    	for(InkTraceViewLeaf leaf : getFlattenedTraceLeafs(null)){
     	    leaf.removeCompletely();
     	}
     	remove();
@@ -311,13 +313,19 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
      * Returns the list of all traceViewLeafs within all successors below this object
      * @return requested list
      */
-    public List<InkTraceViewLeaf> getFlattenedTraceLeafs() {
+    public List<InkTraceViewLeaf> getFlattenedTraceLeafs(TraceViewFilter filter) {
     	List<InkTraceViewLeaf> s = new ArrayList<InkTraceViewLeaf>();
+    	if(filter != null && !filter.pass(this)){
+    		return s;
+    	}
     	for(InkTraceView v:this.content){
+    		if(filter != null && !filter.pass(v)){
+    			continue;
+    		}
     		if(v.isLeaf()){
     			s.add((InkTraceViewLeaf) v);
     		}else{
-    			s.addAll(((InkTraceViewContainer) v).getFlattenedTraceLeafs());
+    			s.addAll(((InkTraceViewContainer) v).getFlattenedTraceLeafs(filter));
     		}
     	}
     	return s;
@@ -326,14 +334,22 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
 
     /**
      * Returns the list of all successors bewlow this object
+     * @param filter 
      * @return requested list
      */
-    public List<InkTraceView> getFlattenedViews() {
+    public List<InkTraceView> getFlattenedViews(TraceViewFilter filter) {
     	List<InkTraceView> result = new ArrayList<InkTraceView>();
+    	if(filter != null && !filter.pass(this)){
+    		result.add(this);
+    	}
     	for(InkTraceView v : this.content){
-    	    result.add(v);
+    		if(filter != null && !filter.pass(v)){
+    			continue;
+    		}
     		if(!v.isLeaf()){
-    			result.addAll(((InkTraceViewContainer) v).getFlattenedViews());
+    			result.addAll(((InkTraceViewContainer) v).getFlattenedViews(filter));
+    		}else{
+    			result.add(v);
     		}
     	}
     	return result;

@@ -356,7 +356,11 @@ public class Config extends Properties{
             	this.set(key, (Boolean) this.cmdLineParser.getOptionValue("--" + key, this.getB(key)));
             } else {
                 if(this.cmdLineParser.getOptionValue("--" + key, this.get(key)) != null){
-                    this.set(key, (String) this.cmdLineParser.getOptionValue("--" + key, this.get(key)));
+                	try{
+                		this.set(key, (String) this.cmdLineParser.getOptionValue("--" + key, this.get(key)));
+                	}catch(ClassCastException e){
+                		throw new IllegalOptionValueException(this.cmdLineParser.getOption("--" + key), this.cmdLineParser.getOptionValue("--" + key, this.get(key)).getClass().toString());
+                	}
                 }
             }
         }
