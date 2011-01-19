@@ -11,6 +11,7 @@ import ch.unibe.eindermu.utils.Aspect;
 import ch.unibe.eindermu.utils.Observer;
 import ch.unibe.inkml.util.Timespan;
 import ch.unibe.inkml.util.TraceBound;
+import ch.unibe.inkml.util.TraceViewFilter;
 import ch.unibe.inkml.util.TraceViewTreeManipulationException;
 
 
@@ -269,8 +270,8 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 	 * Returns all traceViews of the {@link #getViewRoot()} which directly references to a trace. 
 	 * @return
 	 */
-	public List<InkTraceViewLeaf> getFlatTraceViewLeafs() {
-		return this.getViewRoot().getFlattenedTraceLeafs();
+	public List<InkTraceViewLeaf> getFlatTraceViewLeafs(TraceViewFilter filter) {
+		return this.getViewRoot().getFlattenedTraceLeafs(filter);
 	}
 
 	/**
@@ -351,7 +352,7 @@ public class InkInk extends InkAnnotatedElement implements Observer {
 			trace.getParent().remove(trace);
 		}
 
-		for(InkTraceView view : getFlatTraceViewLeafs()){
+		for(InkTraceView view : getFlatTraceViewLeafs(null)){
 			if(((InkTraceViewLeaf) view).getTrace() == trace){
 				if(!view.isRoot()){
 					try {

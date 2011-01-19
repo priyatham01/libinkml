@@ -21,11 +21,11 @@ abstract public class AbstractTraceFilter implements TraceViewFilter {
     }
 
     public List<InkTraceViewLeaf> filterLeaf(InkInk ink){
-        return filter(ink.getFlatTraceViewLeafs());
+        return ink.getFlatTraceViewLeafs(this);
     }
     
     public List<InkTraceView> filter(InkInk ink){
-        return filter(ink.getViewRoot().getFlattenedViews());
+        return ink.getViewRoot().getFlattenedViews(this);
     }
     
     public abstract boolean pass(InkTraceView view);
