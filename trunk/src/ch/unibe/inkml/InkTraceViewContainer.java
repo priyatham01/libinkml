@@ -339,7 +339,7 @@ public class InkTraceViewContainer extends InkTraceView implements Observer {
      */
     public List<InkTraceView> getFlattenedViews(TraceViewFilter filter) {
     	List<InkTraceView> result = new ArrayList<InkTraceView>();
-    	if(filter != null && !filter.pass(this)){
+    	if(filter == null || filter.pass(this)){
     		result.add(this);
     	}
     	for(InkTraceView v : this.content){
