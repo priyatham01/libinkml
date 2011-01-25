@@ -1,0 +1,30 @@
+grammar {
+    start = element annotationStructure { C_Item* & S_Item*}
+    C_Item = element item {
+            (
+                attribute id { text }?,
+                attribute node { "ink" | "traceGroup" | "traceView" | "brush" },
+                attribute icon { text }?,
+                attribute copyAnnotationFromRef { text }?,
+                element trace { empty }?,
+                (
+                element annotation {
+                    attribute name { text },
+                    attribute triggerValue { text }?,
+                    attribute valueType { "enum" | "proposed"},
+                    element value { text }+
+                }* &
+                element annotation {
+                    attribute name { text },
+                    attribute triggerValue { text }?,
+                    attribute valueType {"date" | "free"}?
+                }* &
+                C_Item* &
+                S_Item*
+                )
+            )
+    }
+    S_Item = element item{
+        attribute itemref { text }
+    }
+}
