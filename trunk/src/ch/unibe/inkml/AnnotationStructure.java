@@ -476,7 +476,7 @@ public class AnnotationStructure extends XmlHandler {
                 if(query != null){
                     for(String name : query.keySet()){
                         Annotation a = i.getAnnotation(name); 
-                        if(a == null || a.triggerValue != query.get(name)){
+                        if(a == null || a.triggerValue == null || !query.get(name).equals(a.triggerValue)){
                             fits = false;
                             break;
                         }
