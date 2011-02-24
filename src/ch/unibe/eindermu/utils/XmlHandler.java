@@ -47,9 +47,9 @@ public class XmlHandler{
     
     public void loadFromFile(File file) throws IOException {
     	loadFromStream(new FileInputStream(file));
-    }
+     }
     
-    public void loadFromStream(InputStream file) throws IOException {
+    public void loadFromStream(InputStream stream) throws IOException {
         try {
             // apply schema for validation
         	if(!schemata.isEmpty()){
@@ -86,10 +86,10 @@ public class XmlHandler{
 					
 				}
 			});
-            xmlDocument = parser.parse(file);
+            xmlDocument = parser.parse(stream);
             
             
-            if(!schemata.isEmpty() && false){
+            /*if(!schemata.isEmpty() && false){
                 SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
                 Source[] schemaSources = new Source[schemata.size()];
                 for(int i = 0;i<schemata.size();i++){
@@ -105,7 +105,7 @@ public class XmlHandler{
                 } catch(SAXException e){
                     throw new IOException(e.getMessage());
                 }
-            }
+            }*/
             
             if(!errors.isEmpty()){
             	throw new IOException(errors.join("\n"));
@@ -116,6 +116,11 @@ public class XmlHandler{
             throw new IOException(e.getMessage());
         } catch(ParserConfigurationException e) {
             throw new IOException(e.getMessage());
+        } finally{
+        	stream.close();
+        	for(InputStream s : this.schemata){
+        		s.close();
+        	}
         }
     }
     

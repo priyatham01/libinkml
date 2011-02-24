@@ -164,18 +164,15 @@ public class NumberFormatter extends Formatter{
         switch(this.getState()){
         case EXPLICIT:
             explicit = value;
-            return value;
+            return explicit;
         case FIRST_O:
-            double x = explicit + value;
-            explicit = x;
-            speed = (Double)value;
-            return x;
+        	speed = value;
+            explicit = explicit + value;
+            return explicit;
         case SECOND_O:
-            double v = speed + value;
-            double y = explicit + v;
-            explicit = y;
-            speed = v;
-            return y;
+            speed = speed + value;
+            explicit = explicit + speed;
+            return explicit;
         }
         return Double.NaN;
     }

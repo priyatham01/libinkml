@@ -9,12 +9,12 @@ import ch.unibe.inkml.InkTraceView;
 import ch.unibe.inkml.InkTraceViewContainer;
 import ch.unibe.inkml.InkTraceViewLeaf;
 
-public abstract class TraceVisitor {
+public abstract class TraceVisitor extends AbstractTraceFilter{
 	
     private Vector<TraceViewFilter> traceFilters = new Vector<TraceViewFilter>();
 	
 	public void visit(InkTraceViewContainer container) {
-		if(passTraceFilter(container)){
+		if(pass(container)){
 			visitHook(container);
 		}
 	}
@@ -29,7 +29,7 @@ public abstract class TraceVisitor {
     
 	
 	public void visit(InkTraceViewLeaf leaf){
-		if(passTraceFilter(leaf)){
+		if(pass(leaf)){
 			visitHook(leaf);
 		}
 	}
@@ -50,13 +50,15 @@ public abstract class TraceVisitor {
 	public void addTraceFilter(TraceViewFilter traceFilter) {
 		this.traceFilters.add(traceFilter);
 	}
-	public boolean passTraceFilter(InkTraceView view) {
+	
+	public boolean pass(InkTraceView view) {
 	    for(TraceViewFilter tf: traceFilters){
 	        if(!tf.pass(view))
 	            return false;
 	    }
 		return true;
 	}
+	
     public void removeTraceFilter(TraceViewFilter traceFilter) {
         traceFilters.remove(traceFilter);
     }
@@ -70,7 +72,7 @@ public abstract class TraceVisitor {
     public TraceViewFilter getTraceFilter() {
         return new AbstractTraceFilter(){
             public boolean pass(InkTraceView view) {
-                return passTraceFilter(view);
+                return pass(view);
             }
         };
         
