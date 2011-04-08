@@ -20,11 +20,11 @@ public class StringList extends ArrayList<String> {
      * @param strings
      */
     public StringList(String[] strings) {
-        this();
+        super(strings.length);
         addAllUnique(strings);
     }
-
-    /**
+    
+	/**
      * @param strings
      */
     public boolean addAllUnique(String[] strings) {

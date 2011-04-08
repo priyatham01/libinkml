@@ -9,7 +9,6 @@ import ch.unibe.inkml.InkTraceViewLeaf;
 
 public abstract class TraceGraphVisitor extends TraceVisitor{
 
-	
 	private double strokeWidth = 1;
 	private Graphics2D graphics;
 	

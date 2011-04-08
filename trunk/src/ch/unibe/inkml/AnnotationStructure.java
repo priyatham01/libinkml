@@ -31,6 +31,8 @@ import ch.unibe.eindermu.utils.XmlHandler;
 
 public class AnnotationStructure extends XmlHandler {
 	
+	public static final String DEFAULT_STRUCTURE_FILE = "AnnotationStructure.xml";
+	public static final String STRUCTURE_FILE_CONFIG_KEY = "annotation_structure_file";
     public enum NodeNames {
         TRACEVIEW,
         INK
@@ -58,10 +60,23 @@ public class AnnotationStructure extends XmlHandler {
 
 	
 	public AnnotationStructure(Config config) throws IOException{
-	    this.config = config;
-	    String fileName = config.get("annotation_structure_file");
-	    file = new File(fileName);
-		if(!file.exists()){
+		assert config != null;
+		this.config = config;
+		
+		String fileName = config.get(DEFAULT_STRUCTURE_FILE);
+		if(config.containsKey(STRUCTURE_FILE_CONFIG_KEY)){
+			fileName = config.get(STRUCTURE_FILE_CONFIG_KEY);
+		}
+		init(fileName);
+	}
+	
+    public AnnotationStructure(File structureFile) throws IOException{
+    	init(structureFile.getAbsolutePath());
+    }
+    
+    private void init(String fileName) throws IOException{
+    	file = new File(fileName);
+    	if(file != null && !file.exists()){
 		    URL url = config.getApplication().getClass().getResource(fileName); 
 		    if( url == null){
 		        throw new IOException("Annotation structure file '"+fileName+"' not found");
@@ -71,7 +86,6 @@ public class AnnotationStructure extends XmlHandler {
 			this.loadFromFile(file);
 		}
 		loadInformation();
-		
 	}
 	
 
@@ -495,7 +509,7 @@ public class AnnotationStructure extends XmlHandler {
 
     /**
      * Returns the icon of the item specified
-     * The icon is looked up ath the following places:
+     * The icon is looked up at the following places:
      *  - in the same directory as the main class
      *  - in the same directory as the AnnotationStructure XML File
      * @param i
@@ -505,8 +519,11 @@ public class AnnotationStructure extends XmlHandler {
         if(i == null || i.iconName == null){
             return null;
         }
-        if(config.getApplication().getClass().getResource(i.iconName)!=null){
-            return new ImageIcon(config.getApplication().getClass().getResource(i.iconName));
+        Config config = this.config;
+        if(config != null || (config = Config.getMain())!=null && config.getApplication() != null){
+	        if(config.getApplication().getClass().getResource(i.iconName)!=null){
+	            return new ImageIcon(config.getApplication().getClass().getResource(i.iconName));
+	        }
         }
         
         File f = new File(i.iconName);
