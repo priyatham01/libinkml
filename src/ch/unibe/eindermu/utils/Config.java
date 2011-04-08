@@ -101,12 +101,8 @@ public class Config extends Properties{
      * Constructer. The parameter parent specifies an object representing the main client of 
      * a Config object. This is used to get the mandatory default configuration file, which has
      * to be found at the same place as the parent.
-     * 
-     * The parameter name is specifying the name of a configuration file, that is stored in
-     * the users home directory. The name if this file is ".<name>.properties" 
-     * It is no problem if this file does not exists.
+
      * @param parent
-     * @param name
      */
     public Config(ConfigurableApplication parent) {
     	this.parent = new WeakReference<ConfigurableApplication>(parent);
@@ -123,6 +119,7 @@ public class Config extends Properties{
         	}
             load(f.openStream());
         } catch(IOException e) {
+        	e.printStackTrace();
             System.err.println("default configuration file has not been found.");
             System.exit(1);
         }

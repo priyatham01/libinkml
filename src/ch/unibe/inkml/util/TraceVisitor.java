@@ -70,12 +70,7 @@ public abstract class TraceVisitor extends AbstractTraceFilter{
     }
 
     public TraceViewFilter getTraceFilter() {
-        return new AbstractTraceFilter(){
-            public boolean pass(InkTraceView view) {
-                return pass(view);
-            }
-        };
-        
+        return this;
     }
 
     public void go(InkTraceView root){
