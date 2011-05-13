@@ -30,6 +30,11 @@ public class Vector extends Double {
 	public Vector minus(Point2D p) {
 		return minus(new Vector(p));
 	}
+	/**
+	 * Angle between two vectors the value is between -pi and +pi;
+	 * @param other
+	 * @return
+	 */
     public double angleBetween(Vector other) {
         double t = (getX()*other.getY() - getY()*other.getX());
         if(t == 0)
