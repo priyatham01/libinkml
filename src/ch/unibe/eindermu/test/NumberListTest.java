@@ -48,6 +48,13 @@ public class NumberListTest {
         assertTrue(5>nl.getMax());
         assertTrue(-1.5<nl.getMin());
         assertEquals(2,nl.getLocalMaxima().size());
+        
+        nl = new NumberList.Double(new double[]{2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0});
+        nl.smooth(3);
+        System.out.println(nl.toString());
+        for(int nli = 0; nli < nl.size();nli++){
+        	assertEquals(2.0, nl.get(nli),0.0001);
+        }
     }
 
     @Test

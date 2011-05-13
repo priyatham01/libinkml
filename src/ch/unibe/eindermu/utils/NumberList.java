@@ -107,7 +107,7 @@ abstract public class NumberList<T extends Number> extends ArrayList<T> {
         double[] mask = new double[2*range+1];
         double sum = 0;
         for (int i = 0; i < range; i++) {
-            double y = Math.exp(-(i*i)/2.0/(stdDev*stdDev));
+            double y = Math.exp(-(i*i)/(2.0*(stdDev*stdDev)));
             sum += (i==0)?y:2*y;
             mask[range-i] = y;
             mask[range+i] = y;
@@ -116,14 +116,20 @@ abstract public class NumberList<T extends Number> extends ArrayList<T> {
             mask[j]/=sum;
         }
         double[] result = new double[size()];
-        // convolve the histogramm
+        // convolve the serie
         for (int i = 0; i < size(); i++) {
+        	double missed = 0;
+        	double got = 0;
             for (int j = 0; j < mask.length; j++) {
                 if (j + i - range < 0 || j + i - range >= size()) {
+                	missed += mask[j];
                     continue;
                 }
+                got += mask[j];
                 result[i] += get(i + j - range).doubleValue()*mask[j];
             }
+            
+            result[i] += result[i] * missed; 
         }
         for(int i = 0;i<size();i++){
             set(i,cast(result[i]));
