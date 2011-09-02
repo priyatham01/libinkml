@@ -67,12 +67,12 @@ public class AnnotationStructure extends XmlHandler {
 		if(config.containsKey(STRUCTURE_FILE_CONFIG_KEY)){
 			init(config.get(STRUCTURE_FILE_CONFIG_KEY));
 		}else{
-			init(this.getClass().getName()+".xml");
+			init(this.getClass().getSimpleName()+".xml");
 		}
 		
 	}
 	public AnnotationStructure() throws IOException{
-		init(this.getClass().getName()+".xml");
+		init(this.getClass().getSimpleName()+".xml");
 	}
 	
     public AnnotationStructure(File structureFile) throws IOException{
