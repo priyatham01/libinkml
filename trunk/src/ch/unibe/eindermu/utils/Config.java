@@ -326,7 +326,7 @@ public class Config extends Properties{
             return false;
         }
         String value = this.get(key).toLowerCase();
-        return (value.equals("yes") || value.equals("no") || value.equals("on") || value.equals("off"));
+        return (value.equals("yes") || value.equals("no") || value.equals("on") || value.equals("off") || value.equals("true") || value.equals("false"));
     }
     
     public void parseCommandLine(String[] args) throws IllegalOptionValueException, UnknownOptionException {
@@ -348,15 +348,15 @@ public class Config extends Properties{
         }
         
        for(String key : names){
-            if(this.isBoolean(key)) {
-            	this.cmdLineParser.getOption(key);
+    	    if(this.isBoolean(key)) {
             	this.set(key, (Boolean) this.cmdLineParser.getOptionValue("--" + key, this.getB(key)));
             } else {
-                if(this.cmdLineParser.getOptionValue("--" + key, this.get(key)) != null){
+            	Object value = this.cmdLineParser.getOptionValue("--" + key, this.get(key)); 
+                if(value != null){
                 	try{
-                		this.set(key, (String) this.cmdLineParser.getOptionValue("--" + key, this.get(key)));
+                		this.set(key, value);
                 	}catch(ClassCastException e){
-                		throw new IllegalOptionValueException(this.cmdLineParser.getOption("--" + key), this.cmdLineParser.getOptionValue("--" + key, this.get(key)).getClass().toString());
+                		throw new IllegalOptionValueException(this.cmdLineParser.getOption("--" + key), value.getClass().toString());
                 	}
                 }
             }
@@ -369,10 +369,12 @@ public class Config extends Properties{
         	    set(otherArgNames.get(j),cmdLineParser.getRemainingArgs()[i++]);
         	}
         }
-        for(;i<cmdLineParser.getRemainingArgs().length;i++){
-            cmdLineParser.addValue(cmdLineParser.getOption("--"+otherArgNames.get(j-1)),cmdLineParser.getRemainingArgs()[i]);
-            set(otherArgNames.get(j-1),cmdLineParser.getRemainingArgs()[i]);
-        }      
+        if(otherArgNames.size() > 0){
+	        for(;i<cmdLineParser.getRemainingArgs().length;i++){
+	            cmdLineParser.addValue(cmdLineParser.getOption("--"+otherArgNames.get(j-1)),cmdLineParser.getRemainingArgs()[i]);
+	            set(otherArgNames.get(j-1),cmdLineParser.getRemainingArgs()[i]);
+	        }
+        }
     }
     
     public void set(String key, boolean value) {
@@ -380,8 +382,8 @@ public class Config extends Properties{
     }
     
     public boolean getB(String key) {
-        String result = getProperty(key);
-        return result != null && (result.toLowerCase().equals("yes") || result.toLowerCase().equals("on") || result.toLowerCase().equals("1"));
+        String result = getProperty(key).toLowerCase();
+        return result != null && (result.equals("yes") || result.equals("on") || result.equals("1") || result.equals("true"));
     }
     
     public void set(String key, int value) {
@@ -394,6 +396,10 @@ public class Config extends Properties{
     
     public void set(String key, String value) {
         this.setProperty(key, value);
+    }
+    
+    public void set(String key, Object value) {
+        this.set(key, value.toString());
     }
     
     public String get(String key) {
