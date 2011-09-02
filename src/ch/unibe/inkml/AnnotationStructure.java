@@ -31,7 +31,6 @@ import ch.unibe.eindermu.utils.XmlHandler;
 
 public class AnnotationStructure extends XmlHandler {
 	
-	public static final String DEFAULT_STRUCTURE_FILE = "AnnotationStructure.xml";
 	public static final String STRUCTURE_FILE_CONFIG_KEY = "annotation_structure_file";
     public enum NodeNames {
         TRACEVIEW,
@@ -54,20 +53,26 @@ public class AnnotationStructure extends XmlHandler {
 	private File file;
 	
 	/**
-	 * Config file where location of structure has been gatherd from
+	 * Config file where location of the annotationsturcture xml file
+	 * and the icons is given.
 	 */
 	private Config config;
+
 
 	
 	public AnnotationStructure(Config config) throws IOException{
 		assert config != null;
 		this.config = config;
 		
-		String fileName = config.get(DEFAULT_STRUCTURE_FILE);
 		if(config.containsKey(STRUCTURE_FILE_CONFIG_KEY)){
-			fileName = config.get(STRUCTURE_FILE_CONFIG_KEY);
+			init(config.get(STRUCTURE_FILE_CONFIG_KEY));
+		}else{
+			init(this.getClass().getName()+".xml");
 		}
-		init(fileName);
+		
+	}
+	public AnnotationStructure() throws IOException{
+		init(this.getClass().getName()+".xml");
 	}
 	
     public AnnotationStructure(File structureFile) throws IOException{
@@ -77,9 +82,12 @@ public class AnnotationStructure extends XmlHandler {
     private void init(String fileName) throws IOException{
     	file = new File(fileName);
     	if(file != null && !file.exists()){
-		    URL url = config.getApplication().getClass().getResource(fileName); 
+		    URL url = this.getClass().getResource(fileName);
+		    if( url == null && config != null){
+		    	url = config.getApplication().getClass().getResource(fileName);
+		    }
 		    if( url == null){
-		        throw new IOException("Annotation structure file '"+fileName+"' not found");
+		        throw new IOException("Annotation structure file '"+fileName+"' not found.");
 		    }
 			this.loadFromStream(url.openStream());
 		}else{
@@ -519,7 +527,7 @@ public class AnnotationStructure extends XmlHandler {
         if(i == null || i.iconName == null){
             return null;
         }
-        Config config = this.config;
+        
         if(config != null || (config = Config.getMain())!=null && config.getApplication() != null){
 	        if(config.getApplication().getClass().getResource(i.iconName)!=null){
 	            return new ImageIcon(config.getApplication().getClass().getResource(i.iconName));
