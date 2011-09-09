@@ -620,7 +620,7 @@ public class AnnotationStructure extends XmlHandler {
     }
 
 
-    public class TriggerQuery extends StringMap<String>{
+    public static class TriggerQuery extends StringMap<String>{
 	    public TriggerQuery(String name,String value){
 	        super();
 	        put(name,value);
