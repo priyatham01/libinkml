@@ -3,6 +3,7 @@ package ch.unibe.eindermu.utils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -88,25 +90,6 @@ public class XmlHandler{
 			});
             xmlDocument = parser.parse(stream);
             
-            
-            /*if(!schemata.isEmpty() && false){
-                SchemaFactory schemaFactory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-                Source[] schemaSources = new Source[schemata.size()];
-                for(int i = 0;i<schemata.size();i++){
-                	
-                	schemaSources[i] = new StreamSource(schemata.get(i));
-                }
-                Validator validator = schemaFactory.newSchema(schemaSources).newValidator(); 
-                DOMSource source = new DOMSource(xmlDocument);
-                DOMResult result = new DOMResult();
-                try{
-                    validator.validate(source,result);
-                    xmlDocument = (Document) result.getNode();
-                } catch(SAXException e){
-                    throw new IOException(e.getMessage());
-                }
-            }*/
-            
             if(!errors.isEmpty()){
             	throw new IOException(errors.join("\n"));
             }
@@ -135,19 +118,19 @@ public class XmlHandler{
     }
     
     public void saveToFile(File file) throws TransformerException {
-        // Write it out again
-        TransformerFactory xformFactory = TransformerFactory.newInstance();
-        Transformer idTransform = xformFactory.newTransformer();
-        Source input = new DOMSource(xmlDocument);
-        Result output = new StreamResult(file);
-        idTransform.transform(input, output);
+    	transformToOutput(new StreamResult(file));
     }
     
     public void saveToStream(OutputStream stream) throws TransformerException{
+    	transformToOutput(new StreamResult(stream));
+    }
+    
+    private void transformToOutput(StreamResult output) throws TransformerException{
         TransformerFactory xformFactory = TransformerFactory.newInstance();
+        xformFactory.setAttribute("indent-number", 4);
         Transformer idTransform = xformFactory.newTransformer();
+        idTransform.setOutputProperty(OutputKeys.INDENT, "yes");
         Source input = new DOMSource(xmlDocument);
-        Result output = new StreamResult(stream);
         idTransform.transform(input, output);
     }
     
