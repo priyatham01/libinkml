@@ -28,6 +28,7 @@
         <copy todir="${build}/ch/unibe/inkml">
              <filelist dir="${src}/ch/unibe/inkml">
                    <file name="inkml.xsd"/>
+             	   <file name="xml.xsd"/>
              </filelist>
         </copy>
     </target>
