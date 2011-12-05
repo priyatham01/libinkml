@@ -24,7 +24,7 @@ abstract public class NumberList<T extends Number> extends ArrayList<T> {
         }
 
     }
-
+    
     public static class Double extends NumberList<java.lang.Double> {
         public Double(double[] array) {
             super(new java.lang.Double[]{});
@@ -62,6 +62,14 @@ abstract public class NumberList<T extends Number> extends ArrayList<T> {
                 }
             }
             return indexes;
+        }
+        public double[] toDoubleArray(){
+        	double[] result = new double[size()];
+        	int i = 0;
+        	for(java.lang.Double d : this){
+        		result[i++]=d;
+        	}
+        	return result;
         }
 
     }
@@ -232,7 +240,8 @@ abstract public class NumberList<T extends Number> extends ArrayList<T> {
     
     /**
      * returns list of indexes of the local maxima in the list.
-     * The vallies around a local maxima must be deeper than threshold.   
+     * The vallies around a local maxima must be deeper than threshold.
+     * @param threshold depth of the local maxima. If 0, all local maximas are considered.   
      * @return
      */
     public NumberList.Integer getLocalMaxima(double threshold){
@@ -274,6 +283,7 @@ abstract public class NumberList<T extends Number> extends ArrayList<T> {
     
     /**
      * returns list of indexes of the local maxima in the list.
+     * @param threshold minimal depth of the local minima.
      * @return
      */
     public NumberList.Integer getLocalMinima(double threshold){
